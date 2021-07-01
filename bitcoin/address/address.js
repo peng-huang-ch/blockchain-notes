@@ -11,6 +11,7 @@ exports.toBase32Address = function toBase32Address(pubkey, pubKeyHash = 0x00) {
   return bech32.encode('bc', words);
 };
 
+// https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch04.asciidoc
 exports.toBase58Address = function toBase58Address(pubkey, pubKeyHash = 0x00) {
   const hash256 = sha256(pubkey);
   const hash160 = ripemd160(hash256);
