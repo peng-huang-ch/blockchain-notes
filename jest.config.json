@@ -1,0 +1,13 @@
+{
+	"bail": false,
+	"verbose": true,
+	"moduleFileExtensions": [
+		"ts",
+		"js",
+		"json"
+	],
+	"testMatch": [
+		"**/*.test.(ts|js)"
+	],
+	"testEnvironment": "node"
+}
