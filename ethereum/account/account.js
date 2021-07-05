@@ -2,7 +2,7 @@ const { privateToAddress, privateToPublic, isValidPrivate, publicToAddress, toCh
 const { ec: EC } = require('elliptic');
 const ec = new EC('secp256k1');
 
-const privateKey = Buffer.from('2ef4813a7b4181f6b0eb57fa4b980740cbd4d827da81c39324870ee3368da087', 'hex');
+const privateKey = Buffer.from('e112748fdb8f743fbbb6412f6067966f9bef0fc315309715034a864fc8b67c62', 'hex');
 
 const publicKey = privateToPublic(privateKey);
 const address = privateToAddress(privateKey);
