@@ -72,8 +72,67 @@ function fromASM(asm) {
   return compile(chunks);
 }
 
+function toASM(chunks) {
+  const separator = ' ';
+  if (Buffer.isBuffer(chunks)) {
+    chunks = decompile(chunks);
+  }
+
+  return chunks
+    .map((chunk) => {
+      if (Buffer.isBuffer(chunk)) {
+        const op = asMinimalOP(chunk);
+        if (op === undefined) return chunk.toString('hex');
+
+        chunk = op;
+      }
+
+      return REVERSE_OPS[chunk];
+    })
+    .join(separator);
+}
+
+function decompile(buffer) {
+  if (typeforce.Array(buffer)) return buffer;
+
+  typeforce(typeforce.Buffer, buffer);
+
+  const chunks = [];
+  let i = 0;
+  while (i < buffer.length) {
+    const opcode = buffer[i];
+
+    // data chunk
+    if (opcode > OPS.OP_0 && opcode <= OPS.OP_PUSHDATA4) {
+      const d = pushdata.decode(buffer, i);
+
+      if (d === null) return null;
+
+      i += d.size;
+      if (i + d.number > buffer.length) return null;
+
+      const data = buffer.slice(i, i + d.number);
+      i += d.number;
+
+      const op = asMinimalOP(data);
+      if (op !== undefined) {
+        chunks.push(op);
+      } else {
+        chunks.push(data);
+      }
+    } else {
+      chunks.push(opcode);
+      i += 1;
+    }
+  }
+
+  return chunks;
+}
+
 module.exports = {
   compile,
+  decompile,
   asMinimalOP,
   fromASM,
+  toASM,
 };
