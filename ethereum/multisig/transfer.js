@@ -3,7 +3,7 @@ const Web3 = require('web3');
 const BigNumber = require('bignumber.js');
 const Contract = require('web3-eth-contract');
 const { default: Common } = require('@ethereumjs/common');
-const { bufferToHex, pubToAddress, toChecksumAddress } = require('ethereumjs-util');
+// const { bufferToHex, pubToAddress, toChecksumAddress } = require('ethereumjs-util');
 
 const ABI = require('ethereumjs-abi');
 const util = require('ethereumjs-util');
@@ -12,7 +12,7 @@ const { Transaction } = require('@ethereumjs/tx');
 const abi = require('../abis/multisig');
 const contract = new Contract(abi);
 const BN = util.BN;
-const EMPTY_SIGNATURE = '0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000';
+
 function sendTx(web3, data) {
   return new Promise((resolve, reject) => {
     web3.eth
@@ -27,6 +27,7 @@ function sendTx(web3, data) {
 }
 
 function getSha3ForConfirmationTx(prefix, toAddress, quantity, data, expireTime, sequenceId) {
+  console.log(arguments);
   return ABI.soliditySHA3(
     ['string', 'address', 'uint', 'string', 'uint', 'uint'], // argTypes
     [prefix, new BN(toAddress.replace('0x', ''), 16), quantity, data, expireTime, sequenceId]
@@ -43,6 +44,7 @@ async function main({ web3, from, to, quantity, chainId, common, proposerPrivate
   });
 
   const expireTime = Math.ceil(new Date().getTime() / 1000) + 600; // 600 seconds
+  const data = '0x';
   const operationHash = getSha3ForConfirmationTx(
     'ETHER', //
     to,
@@ -54,7 +56,7 @@ async function main({ web3, from, to, quantity, chainId, common, proposerPrivate
 
   const sig = util.ecsign(operationHash, proposerPrivateKey);
 
-  const input = contract.methods.sendMultiSig(to, quantity, '0x', expireTime, sequenceId, serializeSignature(sig)).encodeABI();
+  const input = contract.methods.sendMultiSig(to, quantity, data, expireTime, sequenceId, serializeSignature(sig)).encodeABI();
   const nonce = await web3.eth.getTransactionCount(sender);
   const gasPrice = await web3.eth.getGasPrice();
 
