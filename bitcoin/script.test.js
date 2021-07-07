@@ -1,5 +1,5 @@
 const { fromASM, toASM } = require('./script');
-const { valid, invalid } = require('../__mocks__/script.json');
+const { valid, invalid } = require('./__mocks__/script.json');
 
 describe('Bitcoin script', () => {
   describe('fromASM/toASM', () => {
