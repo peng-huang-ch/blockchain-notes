@@ -1,8 +1,8 @@
 const bech32 = require('bech32');
 const base58 = require('bs58');
-const { sha256x2, sha256, ripemd160 } = require('./utils/crypto');
+const { sha256x2, sha256, ripemd160 } = require('../utils/crypto');
 
-exports.toBase32Address = function toBase32Address(pubkey, pubKeyHash = 0x00) {
+exports.toBech32Address = function toBech32Address(pubkey, pubKeyHash = 0x00) {
   const hash256 = sha256(pubkey);
   const hash160 = ripemd160(hash256);
 
