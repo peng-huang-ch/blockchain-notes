@@ -1,5 +1,5 @@
 const bitcoin = require('bitcoinjs-lib');
-const { toBase58Address, toBase32Address } = require('./address');
+const { toBase58Address, toBech32Address } = require('./address');
 
 describe('Bitcoin address', () => {
   test('p2pk', () => {
@@ -18,7 +18,7 @@ describe('Bitcoin address', () => {
     const pubkey = Buffer.from(pub, 'hex');
 
     const { address: p2wpkh_address } = bitcoin.payments.p2wpkh({ pubkey });
-    const address = toBase32Address(pubkey);
+    const address = toBech32Address(pubkey);
 
     expect(address).toEqual(p2wpkh_address);
     expect(address).toEqual('bc1qmy63mjadtw8nhzl69ukdepwzsyvv4yex5qlmkd');
