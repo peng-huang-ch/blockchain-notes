@@ -1,5 +1,5 @@
 const typeforce = require('typeforce');
-const { compile } = require('./script');
+const { compile, decompile, isCanonicalPubKey } = require('./script');
 const OPS = require('bitcoin-ops');
 
 const types = {
@@ -15,6 +15,8 @@ const types = {
 };
 exports.types = types;
 
+// https://wiki.bitcoinsv.io/index.php/P2SH
+// https://github.com/bitcoin/bips/blob/master/bip-0016.mediawiki
 function p2sh(script) {
   typeforce(typeforce.Buffer, script);
   const buffer = compile(script);
@@ -26,3 +28,30 @@ function p2sh(script) {
   );
 }
 exports.p2sh = p2sh;
+
+// https://en.bitcoinwiki.org/wiki/Pay-to-Pubkey
+function p2pk(script) {
+  // typeforce(typeforce.Buffer, script);
+  const chunks = decompile(script);
+  return (
+    chunks.length === 2 && //
+    isCanonicalPubKey(chunks[0]) && //
+    chunks[1] === OPS.OP_CHECKSIG
+  );
+}
+exports.p2pk = p2pk;
+
+// https://en.bitcoinwiki.org/wiki/Pay-to-Pubkey_Hash
+function p2pkh(script) {
+  typeforce(typeforce.Buffer, script);
+  const buffer = compile(script);
+  return (
+    buffer.length === 25 && //
+    buffer[0] === OPS.OP_DUP && // hash160
+    buffer[1] === OPS.OP_HASH160 &&
+    buffer[2] === 0x14 && // <Public KeyHash>
+    buffer[23] === OPS.OP_EQUALVERIFY &&
+    buffer[24] === OPS.OP_CHECKSIG // equal
+  );
+}
+exports.p2pkh = p2pkh;
