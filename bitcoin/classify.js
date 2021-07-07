@@ -55,3 +55,29 @@ function p2pkh(script) {
   );
 }
 exports.p2pkh = p2pkh;
+
+// https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#P2WSH
+function p2wsh(script) {
+  typeforce(typeforce.Buffer, script);
+  const buffer = compile(script);
+
+  return (
+    buffer.length === 34 && //
+    buffer[0] === OPS.OP_0 && // OP_0
+    buffer[1] === 0x20
+  );
+}
+exports.p2wsh = p2wsh;
+
+// https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#P2WPKH
+function p2wpkh(script) {
+  typeforce(typeforce.Buffer, script);
+  const buffer = compile(script);
+
+  return (
+    buffer.length === 22 && //
+    buffer[0] === OPS.OP_0 && // OP_0
+    buffer[1] === 0x14
+  );
+}
+exports.p2wpkh = p2wpkh;
