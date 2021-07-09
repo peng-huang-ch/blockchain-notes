@@ -2,23 +2,6 @@ const cloverTypes = require('@clover-network/node-types');
 const { ApiPromise, WsProvider, Keyring } = require('@polkadot/api');
 const { u8aToHex, hexToU8a, formatBalance } = require('@polkadot/util');
 const { encodeMultiAddress, sortAddresses } = require('@polkadot/util-crypto');
-const BN = require('bn.js');
-
-const sleep = async (ns) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve();
-    }, ns);
-  });
-};
-
-function pt(result, now) {
-  const { nonce, data: balance } = result;
-  console.log(`${now}: balance of ${balance.free} and a nonce of ${nonce}`);
-
-  formatBalance.setDefaults({ unit: 'CLV' });
-  console.log(formatBalance(balance.free, { withUnit: 'CLV', withSi: true }, 18));
-}
 
 async function main() {
   // await cryptoWaitReady();
@@ -51,8 +34,8 @@ async function main() {
   const aaron = keyring.addFromUri(AARON + '//polkadot');
   const phcc = keyring.addFromUri(PHCC + '//polkadot');
 
+  const signer = alice;
   const dest = alice;
-  const signer = aaron;
 
   const addresses = [
     alice.address, // addresses[0]
@@ -65,13 +48,14 @@ async function main() {
     addresses.filter((who) => who !== signer.address),
     ss58Format
   );
+  console.log('signer    : ', signer.address);
   console.log('MULTISIG  : ', MULTISIG);
 
   // 4. Send 1 WND to dest account
   const call = api.tx.balances.transfer(dest.address, AMOUNT_TO_SEND);
 
-  const maxWeight = await call.paymentInfo(signer.address);
-  console.log('maxWeight', maxWeight);
+  // const { weight } = await call.paymentInfo(signer.address);
+  // console.log('maxWeight', weight.toNumber());
   // return;
   // const call_method_hash = call.method.hash;
   // const call_method_hex = call.method.toHex();
@@ -84,32 +68,46 @@ async function main() {
 
   // 5. Retrieve and unwrap the time point
   const info = await api.query.multisig.multisigs(MULTISIG, call_method_hash);
-  if (!info.isSome) {
-    throw new Error('this is NOT the first approval, should it must be Some.');
+  if (info.isSome) {
+    throw new Error('should be the first approval.');
   }
-  const TIME_POINT = info.unwrap().when;
-  console.log('TIME_POINT    : ', TIME_POINT.toHuman());
+  const TIME_POINT = null;
 
   // 6. Send asMulti transaction
   // Now the multisig call that was initiated by the Alice account
   // to send 1 WND to Charlie can be approved by Bob.
   // Since threshold is set to 2, this approval should dispatch the call
   // (2 approvals received)
-  const tx = api.tx.multisig.asMulti(
+  // 6. approveAsMulti
+  const txn = api.tx.multisig.approveAsMulti(
     THRESHOLD,
-    otherSignatories,
+    otherSignatories, //
     TIME_POINT,
-    call_method_hex,
-    STORE_CALL,
-    MAX_WEIGHT //
+    call_method_hash,
+    MAX_WEIGHT
   );
+
+  // const txhash = await tx.signAndSend(signer);
+  // console.log('txhash', u8aToHex(txhash));
+  // return;
+  const txs = [txn, txn];
+
+  // // construct the batch and send the transactions
+  const tx = api.tx.utility.batch(txs.map((tx) => tx.method.toHex()));
+  console.log('tx hex', tx.method.toHex());
+  console.log('txn hex', txn.method.toHex());
+  // const txhash = await tx.signAndSend(signer);
+  // console.log('txhash', u8aToHex(txhash));
+  return;
   const { weight } = await tx.paymentInfo(signer.address);
   console.log('weight', weight.toNumber());
 
   // .signAndSend(signer);
   console.log('threshold: ', THRESHOLD, otherSignatories);
+
   const { nonce } = await api.query.system.account(signer.address);
   console.log('nonce    : ', nonce.toNumber());
+
   const payload = api.createType('SignerPayload', {
     method: tx.method.toHex(),
     nonce: nonce.toNumber(),
@@ -123,8 +121,6 @@ async function main() {
   const placeholder = '0x020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001';
   // const { signature } = api.createType('ExtrinsicPayload', payload.toPayload(), { version: api.extrinsicVersion }).sign(signer);
   tx.addSignature(signer.address, placeholder, payload.toPayload());
-
-  // tx.addSignature(signer.address, signature, payload.toPayload());
 
   const serialized = tx.toHex();
   console.log('serialized', serialized);
@@ -141,6 +137,7 @@ async function main() {
 
   console.log(`Signer address   : ${signer.address}`);
   console.log('extrinsicHex', extrinsicHex);
+
   // return;
   const txHash = await api.rpc.author.submitExtrinsic(extrinsicHex);
   console.log(`txHash :  ${txHash}`);
