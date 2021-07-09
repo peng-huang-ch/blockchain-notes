@@ -4,19 +4,9 @@ const { u8aToHex, hexToU8a, formatBalance } = require('@polkadot/util');
 const { encodeMultiAddress, sortAddresses } = require('@polkadot/util-crypto');
 const BN = require('bn.js');
 
-const sleep = async (ns) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve();
-    }, ns);
-  });
-};
-
 async function main() {
   const wsProvider = new WsProvider('wss://api.clover.finance');
   const api = await ApiPromise.create({ provider: wsProvider, types: cloverTypes });
-
-  await sleep(1000 * 3);
 
   const PHRASE = 'pledge suit pyramid apple satisfy same sponsor search involve hello crystal grief';
 
@@ -43,13 +33,14 @@ async function main() {
   const phcc = keyring.addFromUri(PHCC + '//polkadot');
 
   const signer = alice; // should be the approve transaction signer
+  const dest = alice;
 
   console.log('Signer address : ', signer.address);
 
   const addresses = [
-    alice.address, // addresses[0]
-    aaron.address, // addresses[1]
-    phcc.address, // addresses[2]
+    alice.address, // signer should be included
+    aaron.address,
+    phcc.address,
   ];
 
   const MULTISIG = encodeMultiAddress(addresses, THRESHOLD, ss58Format);
@@ -60,7 +51,7 @@ async function main() {
   console.log('MULTISIG  : ', MULTISIG);
 
   // 4. Send 1 WND to alice account
-  const call = api.tx.balances.transfer(alice.address, AMOUNT_TO_SEND);
+  const call = api.tx.balances.transfer(dest.address, AMOUNT_TO_SEND);
 
   // 5. Retrieve and unwrap the timepoint
   const info = await api.query.multisig.multisigs(MULTISIG, call.method.hash);
@@ -78,40 +69,7 @@ async function main() {
     call.method.hash //
   );
 
-  // const txHash = await tx.signAndSend(signer);
-
-  const nonce = await api.query.system.account(signer.address).nonce;
-  const payload = api.createType('SignerPayload', {
-    method: tx.method,
-    nonce,
-    genesisHash: api.genesisHash,
-    blockHash: api.genesisHash,
-    runtimeVersion: api.runtimeVersion,
-    version: api.extrinsicVersion,
-  });
-
-  const placeholder = '0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001';
-  tx.addSignature(signer.address, placeholder, payload.toPayload());
-
-  // const { signature } = api.createType('ExtrinsicPayload', payload.toPayload(), { version: api.extrinsicVersion }).sign(signer);
-  // tx.addSignature(signer.address, signature, payload.toPayload());
-
-  const serialized = tx.toHex();
-  console.log('serialized', serialized);
-
-  const signatureHash = payload.toRaw().data;
-  console.log('signatureHash  : ', signatureHash);
-
-  const signature = u8aToHex(signer.sign(hexToU8a(signatureHash), { withType: true }));
-  console.log('signature      : ', signature);
-
-  const hex = serialized.replace(placeholder.slice(2), signature.toString().slice(2));
-  const extrinsic = api.createType('Extrinsic', hex);
-  const extrinsicHex = extrinsic.toHex();
-
-  console.log('extrinsicHex', extrinsicHex);
-  // return;
-  const txHash = await api.rpc.author.submitExtrinsic(extrinsicHex);
+  const txHash = await tx.signAndSend(signer);
   console.log(`txHash :  ${txHash}`);
 
   console.log(`Sending ${displayAmount} from ${MULTISIG} to ${alice.address}`);
