@@ -1,4 +1,4 @@
-const { types, p2sh, p2pk, p2pkh, p2wsh, p2wpkh } = require('./classify');
+const { types, p2sh, p2pk, p2pkh, p2wsh, p2wpkh, multisig } = require('./classify');
 const { fromASM } = require('./script');
 const { valid, invalid } = require('./__mocks__/classify.json');
 
@@ -54,6 +54,17 @@ describe('Bitcoin classify', () => {
       expect(outputHex).toEqual(hex.toString('hex'));
 
       const matched = p2wpkh(hex);
+      expect(matched).toEqual(true);
+    });
+  });
+
+  describe('multisig', () => {
+    const items = valid.filter((item) => item.type === types.P2MS);
+    test.each(items)('classifies $output as $type', ({ output, outputHex }) => {
+      const hex = fromASM(output);
+      expect(outputHex).toEqual(hex.toString('hex'));
+
+      const matched = multisig(hex);
       expect(matched).toEqual(true);
     });
   });
