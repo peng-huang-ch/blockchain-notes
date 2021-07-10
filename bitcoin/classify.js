@@ -1,6 +1,7 @@
 const typeforce = require('typeforce');
 const { compile, decompile, isCanonicalPubKey } = require('./script');
 const OPS = require('bitcoin-ops');
+const OP_INT_BASE = OPS.OP_RESERVED; // OP_1 - 1
 
 const types = {
   P2MS: 'multisig',
@@ -81,3 +82,41 @@ function p2wpkh(script) {
   );
 }
 exports.p2wpkh = p2wpkh;
+
+// https://en.bitcoin.it/wiki/BIP_0011
+// m {pubkey}...{pubkey} n OP_CHECKMULTISIG
+function multisig(script) {
+  const chunks = decompile(script);
+  const length = chunks.length;
+  if (length < 4) return false;
+  if (chunks[length - 1] !== OPS.OP_CHECKMULTISIG) return false;
+  if (!typeforce.Number(chunks[0])) return false;
+  if (!typeforce.Number(chunks[length - 2])) return false;
+
+  const m = chunks[0] - OP_INT_BASE;
+  const n = chunks[length - 2] - OP_INT_BASE;
+
+  if (m <= 0) return false;
+  if (n > 16) return false;
+  if (m > n) return false;
+  // m {pubkey}...{pubkey} n OP_CHECKMULTISIG - (m + n + OP_CHECKMULTISIG)
+  if (n !== length - 3) return false;
+
+  // pub keys
+  const keys = chunks.slice(1, -2);
+  return keys.every(isCanonicalPubKey);
+}
+exports.multisig = multisig;
+
+// https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#Commitment_structure
+function witness_commitment(script) {
+  typeforce(typeforce.Buffer, script);
+  const buffer = compile(script);
+  return (
+    buffer.length === 25 && //
+    buffer[0] === OPS.OP_RETURN &&
+    buffer[1] === 0x24 && //  Push the following 36 bytes (0x24)
+    buffer.slice(2, 6).equals(Buffer.from('0x6a24aa21a9ed', 'hex'))
+  );
+}
+exports.witness_commitment = witness_commitment;
