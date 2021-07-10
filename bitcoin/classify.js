@@ -107,3 +107,16 @@ function multisig(script) {
   return keys.every(isCanonicalPubKey);
 }
 exports.multisig = multisig;
+
+// https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#Commitment_structure
+function witness_commitment(script) {
+  typeforce(typeforce.Buffer, script);
+  const buffer = compile(script);
+  return (
+    buffer.length === 25 && //
+    buffer[0] === OPS.OP_RETURN &&
+    buffer[1] === 0x24 && //  Push the following 36 bytes (0x24)
+    buffer.slice(2, 6).equals(Buffer.from('0x6a24aa21a9ed', 'hex'))
+  );
+}
+exports.witness_commitment = witness_commitment;
