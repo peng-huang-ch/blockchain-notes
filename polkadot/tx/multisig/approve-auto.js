@@ -4,24 +4,7 @@ const { u8aToHex, hexToU8a, formatBalance } = require('@polkadot/util');
 const { encodeMultiAddress, sortAddresses } = require('@polkadot/util-crypto');
 const BN = require('bn.js');
 
-const sleep = async (ns) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve();
-    }, ns);
-  });
-};
-
-function pt(result, now) {
-  const { nonce, data: balance } = result;
-  console.log(`${now}: balance of ${balance.free} and a nonce of ${nonce}`);
-
-  formatBalance.setDefaults({ unit: 'CLV' });
-  console.log(formatBalance(balance.free, { withUnit: 'CLV', withSi: true }, 18));
-}
-
 async function main() {
-  // await cryptoWaitReady();
   const wsProvider = new WsProvider('wss://api.clover.finance');
   const api = await ApiPromise.create({ provider: wsProvider, types: cloverTypes });
 
