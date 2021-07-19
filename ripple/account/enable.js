@@ -13,7 +13,7 @@ const dest_secret = 'sndxPdZnfUzxKyaB6XwFsnETwrtTX';
 const new_address = 'rDerjU2jeRvGmRDpfRoSFkbYen4dXzuSrH';
 const new_secret = 'snQ8ipa9zdwX1taPZCmLq5RLNTrJR';
 
-async function setFlag(address, secret, flag) {
+async function clearFlag(address, secret, flag) {
   const account = await api.getAccountInfo(address);
   console.log('account', account);
 
@@ -79,8 +79,7 @@ async function transfer(from, secret, to) {
 }
 async function main() {
   await api.connect();
-  await setFlag(new_address, new_secret, 4);
-  // await transfer(from_address, from_secret, dest_address);
+  await clearFlag(new_address, new_secret, 4);
   return api.disconnect();
 }
 

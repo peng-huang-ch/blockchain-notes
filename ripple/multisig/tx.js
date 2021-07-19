@@ -32,26 +32,27 @@ async function main() {
       Account: from_address,
       Amount: api.xrpToDrops('1'),
       Destination: 'rGtkPCrTgq5st3uSsyz5YnHMETYQdQofUS',
+      Fee: 1,
+      //       SigningPubKey: '',
     },
     {
       // Expire this transaction if it doesn't execute within ~5 minutes:
-      signersCount: 2,
+      //       maxFee
+      //       maxLedgerVersionOffset: 75,
     }
   );
   console.log('prepare', preparedTx);
   //   return;
-
   const maxLedgerVersion = preparedTx.instructions.maxLedgerVersion;
   console.log('Prepared transaction instructions:', preparedTx.txJSON);
   console.log('Transaction cost:', preparedTx.instructions.fee, 'XRP');
   console.log('Transaction expires after ledger:', maxLedgerVersion);
 
-  //   return;
   const jonSign = api.sign(preparedTx.txJSON, jon.secret, { signAs: jon.account }).signedTransaction;
-  const ayaSign = api.sign(preparedTx.txJSON, aya.secret, { signAs: aya.account }).signedTransaction;
+  const branSign = api.sign(preparedTx.txJSON, bran.secret, { signAs: bran.account }).signedTransaction;
 
   // signatures are combined and submitted
-  const combinedTx = api.combine([jonSign, ayaSign]);
+  const combinedTx = api.combine([jonSign, branSign]);
 
   const tx_signed = combinedTx.signedTransaction;
   const txID = combinedTx.id;
