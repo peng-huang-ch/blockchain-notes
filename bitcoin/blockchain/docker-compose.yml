@@ -1,0 +1,25 @@
+version: '3.8'
+services:
+  first-node: &node
+    image: ruimarinho/bitcoin-core
+    volumes:
+      - ${PWD}/data/first:/home/bitcoin/.bitcoin
+      # - ${PWD}/config/bitcoin.conf:/home/bitcoin/bitcoin.conf
+    env_file: .env
+    ports:
+      - 18443:18443
+      - 18444:18444
+    # command: 'bitcoind -printtoconsole -conf=/home/bitcoin/bitcoin.conf'
+    command: "bitcoind -printtoconsole \
+      -regtest=1 \
+      -rpcallowip=0.0.0.0/24 \
+      -rpcbind=0.0.0.0 \
+      -rpcauth=${RPC_AUTH}"
+
+  second-node:
+    <<: *node
+    ports:
+      - 28443:18443
+      - 28444:18444
+    volumes:
+      - ${PWD}/data/second:/home/bitcoin/.bitcoin
