@@ -1,0 +1,41 @@
+version: '2'
+services:
+  bootstrap:
+    build: monitored-geth-client
+    restart: on-failure
+    container_name: bootstrap
+    hostname: bootstrap
+    links:
+      - netstats
+    entrypoint: /root/start.sh
+    command: '--datadir=~/.ethereum/devchain --nodekeyhex=f2b25a89798950d948758d894d6b3e9c871a9a2e64d9abf578d17f8e7018e682 --rpcapi "db,personal,eth,net,web3" --rpccorsdomain="*" --networkid=666 --rpc --rpcaddr="0.0.0.0"'
+    volumes:
+      - ./data/bootstrap://root/.ethereum/devchain
+      - ./files/genesis.json:/root/files/genesis.json:ro
+      - ./files/localtime:/etc/localtime:ro
+    ports:
+      - '30303:30303'
+      - '30303:30303/udp'
+      - '8545:8545'
+  eth:
+    build: monitored-geth-client
+    restart: on-failure
+    links:
+      - bootstrap
+      - netstats
+    entrypoint: /root/start.sh
+    volumes:
+      - ./data/eth://root/.ethereum/devchain
+      - ./files/genesis.json:/root/files/genesis.json:ro
+      - ./files/localtime:/etc/localtime:ro
+    command: '--datadir=~/.ethereum/devchain --rpccorsdomain="*" --networkid=666 --rpc --bootnodes="enode://3dc1db01b5c87f024fbaeed529213659864b055d24e9266b714a010999d5eb5491515b14dec8c4ab221e62d6124098c93b3c86a32e13a0663637758716fa8f58@XXX:30303"'
+  netstats:
+    build: eth-netstats
+    restart: on-failure
+    container_name: netstats
+    environment:
+      - WS_SECRET=eth-net-stats-secret
+    volumes:
+      - ./files/localtime:/etc/localtime:ro
+    ports:
+      - '3000:3000'
