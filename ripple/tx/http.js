@@ -1,9 +1,8 @@
-const _ = require('lodash');
 const RippleAPI = require('ripple-lib').RippleAPI;
 const codec = require('ripple-binary-codec');
 
 const api = new RippleAPI({
-  server: 'wss://s.altnet.rippletest.net/', // Public rippled server
+  proxy: 'https://s.altnet.rippletest.net:51234/',
 });
 
 // Address: rfXgErjK96k59evDnC22zX7vRo2hYaSiqc
@@ -45,30 +44,37 @@ const dest_address = 'rUCzEr6jrEyMpjhs4wSdQdz4g8Y382NxfM';
 //   .catch(console.error);
 
 async function main() {
-  await api.connect();
+  // await api.connect();
 
+  return;
   const account = await api.getAccountInfo(from_address);
   console.log('account', account);
 
   const preparedTx = await api.prepareTransaction(
     {
       TransactionType: 'Payment',
-      Account: from_address,
-      Amount: api.xrpToDrops('1'),
-      Destination: 'rUCzEr6jrEyMpjhs4wSdQdz4g8Y382NxfM',
+      Account: 'rfXgErjK96k59evDnC22zX7vRo2hYaSiqc',
+      Amount: api.xrpToDrops('100'),
+      Destination: 'r3Q3D8nsyu2nJKFsagHfYdMp8H1VEHd3ps',
+
+      // LastLedgerSequence: '19194490',
+      // Fee: '12',
+      // Sequence: '19165274',
+      // Flags: 2147483648,
     },
     {
       // Expire this transaction if it doesn't execute within ~5 minutes:
       //       maxFee
-      maxLedgerVersionOffset: 75,
+      // maxLedgerVersionOffset: 75,
     }
   );
 
   console.log('prepare', preparedTx);
   const tmp = JSON.parse(preparedTx.txJSON);
-  console.log('tmp', tmp);
   const serialized = codec.encode(tmp);
   console.log('Transaction serialized:', serialized);
+
+  // return;
   const maxLedgerVersion = preparedTx.instructions.maxLedgerVersion;
   console.log('Prepared transaction instructions:', preparedTx.txJSON);
   console.log('Transaction cost:', preparedTx.instructions.fee, 'XRP');
