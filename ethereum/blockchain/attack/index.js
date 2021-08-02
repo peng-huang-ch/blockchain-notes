@@ -89,11 +89,16 @@ async function start_mining(attack_uri, victim_uri, victim_ip) {
   await miner_start(attack_uri);
 }
 
+async function stop_mining(attack_uri, victim_uri) {
+  await miner_stop(victim_uri);
+  await miner_stop(attack_uri);
+}
+
 async function remove_peers(uri) {
   await removeAllPeers(uri);
 }
 
-async function remove_all_peers(uris, count) {
+async function remove_all_peers(uris, count = 2) {
   return retry(uris.map(removeAllPeers), count);
 }
 
@@ -211,6 +216,7 @@ async function double_spent(victim_uri, victim_ip, attack_uri) {
   // 7. reconnect
   await connect_remote_uri(victim_uri, victim_ip, attack_uri);
 
+  await sleep(1000 * 10);
   // 8. the victim tx would be rollback
   const newTx = await eth_getTransactionByHash(victim_uri, ethTxId);
   console.log('new tx detail : ', newTx);
@@ -232,9 +238,11 @@ async function main() {
       return remove_all_peers([victim_uri, attack_uri], 5);
     case 'start':
       return start_mining(attack_uri, victim_uri, victim_ip);
+    case 'stop':
+      return stop_mining(attack_uri, victim_uri, victim_ip);
     case 'attack':
       return attack(victim_uri, victim_ip, attack_uri);
-    case 'double_spent':
+    case 'double':
       return double_spent(victim_uri, victim_ip, attack_uri);
     default:
       break;
