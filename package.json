@@ -6,6 +6,8 @@
   "dependencies": {
     "@bitgo/utxo-lib": "^1.9.4",
     "@clover-network/node-types": "^1.0.4",
+    "@cosmjs/proto-signing": "^0.25.6",
+    "@cosmostation/cosmosjs": "^0.10.6",
     "@ethereumjs/tx": "^3.2.0",
     "@polkadot/api": "^4.12.1",
     "abi-decoder": "^2.4.0",
@@ -16,6 +18,7 @@
     "bitcore-lib": "^8.25.10",
     "bitcore-lib-cash": "^8.25.10",
     "bn.js": "^5.2.0",
+    "bs58": "^4.0.1",
     "coinselect": "^3.1.12",
     "dotenv": "^10.0.0",
     "elliptic": "^6.5.4",
