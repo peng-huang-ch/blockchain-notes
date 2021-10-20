@@ -93,11 +93,11 @@ async function multi() {
   // signer: signer,
   // });
 
-  const tx = api.tx.balances.transfer('5Hiq1UYgJPGNCvVVr8svmJ7LFLRNHcHHxidF4gKTG3fdh5FG', AMOUNT);
+  const tx = api.tx.balances.transfer('5FterzLiBPS4cAFa3Man8rYpoLLDRVFxvGSygD8gpvF1Gz5f', AMOUNT);
 
   const txhash = await tx.signAndSend(signer);
   console.log('txHash', u8aToHex(txhash));
-  // console.log('tx', tx.toHex());
+  console.log('tx', tx.toHex());
   return;
   // const txHash_1 = await tx.send();
   // console.log('txHash_1', txHash_1);
@@ -131,56 +131,60 @@ async function multi() {
   // const fakeSignature = u8aToHex(tx.signature);
   // console.log('extra.signature', fakeSignature);
 
-  const { signature } = api.createType('ExtrinsicPayload', wrapper.toPayload(), { version: api.extrinsicVersion }).sign(signer);
-  console.log('wrapper.toRaw().data', wrapper.toRaw().data);
-  const s = u8aToHex(alice.sign(wrapper.toRaw().data), { withType: true });
-  console.log('s              : ', s);
-  console.log('s === signature: ', s === signature);
+  // const { signature } = api.createType('ExtrinsicPayload', wrapper.toPayload(), { version: api.extrinsicVersion }).sign(signer);
+  // console.log('wrapper.toRaw().data', wrapper.toRaw().data);
+  // const s = u8aToHex(alice.sign(wrapper.toRaw().data), { withType: true });
+  // console.log('s              : ', s);
+  // console.log('s === signature: ', s === signature);
 
-  console.log('signature      : ', signature);
-  const message = wrapper.toRaw().data;
-  console.log('message        : ', message);
+  // console.log('signature      : ', signature);
+  // const message = wrapper.toRaw().data;
+  // console.log('message        : ', message);
   const placeholder = '0x020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001';
-  console.log('placeHolder -- : ', placeholder);
-
   tx.addSignature(signer.address, placeholder, wrapper.toPayload());
 
-  // const hash = await tx.send();
-  // console.log('txhash : ', u8aToHex(hash));
-  // return;
-
-  // const xxxx = api.createType('ExtrinsicPayload', blake2AsU8a(wrapper.toU8a(true)), { version: api.extrinsicVersion });
-
-  // console.log('sign--hash', blake2AsU8a(wrapper.toU8a(true)));
-
-  // const { signature } = wrapper.sign(alice);
-
-  // tx.addSignature(signer.address, '0x4500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001', wrapper.toPayload());
+  const signature = u8aToHex(signer.sign(hexToU8a(wrapper.toRaw().data), { withType: true }));
+  // console.log('signature', signature.length);
 
   const serialized = tx.toHex();
-  console.log('serialized     : ', serialized);
-
   const realSerialized = serialized.replace(placeholder.slice(2), signature.slice(2));
-  console.log('real serialized: ', realSerialized);
 
   const extrinsic = api.createType('Extrinsic', realSerialized);
-  console.log('extrinsic toHex', extrinsic.toHex());
-  extrinsic._raw.signature.nonce = 100;
+  console.log('extrinsic.hex   : ', extrinsic.toHex());
+  console.log('extrinsic.method: ', extrinsic.method.toHuman());
+  console.log('extrinsic', extrinsic.toHuman());
+  console.log('--------');
+  console.log(extrinsic.toString());
 
-  console.log('nonce', extrinsic.nonce);
-  console.log('extrinsic', extrinsic);
-  console.log('signer', extrinsic._raw.signer);
-  console.log('signature', extrinsic._raw.signature);
-  console.log('era', extrinsic._raw.era);
-  console.log('nonce', extrinsic._raw.nonce);
-  console.log('tip', extrinsic._raw.tip);
-  // const txHash = await api.rpc.author.submitExtrinsic('0x31028400f94926205a255a902430e9310edae0455ed368437210c8a481bd93a43fca461202a00f352c3d41845cdb35ef4f4d57938170fa4f45004328a31dc77311dca165667d2346ca4192cda605769ef1ccec89217aac429070439f8cc70ee5580a0ecb3a0100f0000700000e5797b5449c8a6526fb5fcf1a159fbc2bbdd197405aed62a9db35d1b9946e7aa10f');
-  // console.log(`txHash :  ${txHash}`);
+  console.log('- extrinsic._raw.signature', extrinsic._raw.signature.nonce.toHuman());
+  console.log('- extrinsic.method', extrinsic.method.toHuman());
+  console.log('- extrinsic', extrinsic.toHuman());
+
+  const txWrapper = api.createType('SignerPayload', {
+    ...wrapper,
+    nonce: '1000',
+  });
+  console.log('extrinsic.signer.value : ', extrinsic.signer.value);
+  extrinsic.addSignature(u8aToHex(extrinsic.signer.toU8a()), placeholder, txWrapper.toPayload());
+  console.log('- extrinsic.method', extrinsic.method.toHuman());
+  console.log('- extrinsic  ', extrinsic.toHuman());
+  console.log('- extrinsic  ', extrinsic.toHex());
+  // const recover = api.createType('SignerPayload', {
+  //   ...extrinsic,
+  //   method: extrinsic.method.toHex(),
+  //   nonce: extrinsic.nonce,
+  //   era: extrinsic.era,
+  // });
+  // console.log('tx info', recover.toHuman());
+  // return;
+  const txHash = await api.rpc.author.submitExtrinsic(extrinsic);
+  console.log(`txHash :  ${txHash}`);
+
   // const { signature } = api.createType('ExtrinsicPayload', payload.toPayload(), { version: api.extrinsicVersion }).sign(alice);
   // console.log('signature', signature);
   // console.log('signature', signature.length);
 
-  return;
+  // return;
 
   // const placeholder = '0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001';
   // tx.addSignature(signer.address, placeholder, payload.toPayload());
