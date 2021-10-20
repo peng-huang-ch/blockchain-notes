@@ -12,54 +12,14 @@ function print(result, now) {
   console.log(formatBalance(balance.free, { withUnit: 'CLV', withSi: true }, 18));
 }
 
-async function auto() {
-  // await cryptoWaitReady();
+async function main() {
   const wsProvider = new WsProvider('wss://api.clover.finance');
-  //   const wsProvider = new WsProvider('wss://api-ivy-elastic.clover.finance');
 
   const api = await ApiPromise.create({ provider: wsProvider, types: cloverTypes });
-
-  // await sleep(1000 * 1);
-
-  const PHRASE = 'pledge suit pyramid apple satisfy same sponsor search involve hello crystal grief';
-
-  const AARON = 'traffic wine leader wheat mom device kiwi great horn room remind office';
-
-  const keyring = new Keyring({ ss58Format: 42, type: 'auto' });
-
-  const alice = keyring.addFromUri(PHRASE + '//polkadot');
-
-  const aaron = keyring.addFromUri(AARON + '//polkadot');
-
-  console.log('alice:', alice.address);
-  console.log('alice.address', alice.address === '5EoKvCTnroB1niQHqhn7hzSPYryUoByaUaogkafq1m8ZK6nL');
-
-  const dest = alice;
-  const signer = alice;
-
-  const AMOUNT = new BigNumber(2).shiftedBy(18).toString();
-  console.log('AMOUNT', AMOUNT);
-
-  console.log('aaron: ', aaron.address);
-  const transfer = api.tx.balances.transfer('5FXH63iswGbuqCoSB8EYdJ9Tv7pV1PAhdAY7Sub2rrgcHqEB', AMOUNT);
-
-  const hash = await transfer.signAndSend(signer);
-
-  console.log(u8aToHex(hash));
-}
-
-async function multi() {
-  await cryptoWaitReady();
-
-  const wsProvider = new WsProvider();
-
-  const api = await ApiPromise.create({ provider: wsProvider, types: cloverTypes });
-
-  console.log('alice: ', alice.address);
-  console.log('aaron: ', aaron.address);
 
   const result = await api.query.system.account('5DHVqqMEUj8LRbxbKSAWjUexUuee4dEs4bwf8i7MfcYzpCcN');
   console.log('result', result.nonce);
+
   const placeholder = '0x020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001';
 
   const serialized = '0x4d02840035fdfacc9704ca2672283870b711c9fe8f6787f31ec150fed4d3533ab14b2cf202999eb9fe1f3ac6b7126dacd61be2b56296cbb40a335efd55993ae655b31cbc6d4c8390bf61d35b542eda46d651c5f705452989a4000a3fd9e47ebf8ba60df96c0100040007000045662f3837457c0f76ce2878e3102cb5173bbbb9714429fe100ee2087cc9fb7213c492d56e676adb0d';
@@ -70,8 +30,8 @@ async function multi() {
   console.log('extrinsic', extrinsic.toHuman());
 
   console.log('--------');
-  const txHash = await api.rpc.author.submitExtrinsic(extrinsic);
-  console.log(`txHash :  ${txHash}`);
+  // const txHash = await api.rpc.author.submitExtrinsic(extrinsic);
+  // console.log(`txHash :  ${txHash}`);
 
   const method = extrinsic.method.toHex();
   const sender = extrinsic.signer.toString();
@@ -139,10 +99,6 @@ async function multi() {
   // return;
   // const txHash = await api.rpc.author.submitExtrinsic(extrinsicHex);
   // console.log(`txHash :  ${txHash}`);
-}
-
-async function main() {
-  return multi();
 }
 
 main()
