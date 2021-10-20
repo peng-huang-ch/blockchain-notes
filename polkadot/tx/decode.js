@@ -12,46 +12,8 @@ function print(result, now) {
   console.log(formatBalance(balance.free, { withUnit: 'CLV', withSi: true }, 18));
 }
 
-async function auto() {
-  // await cryptoWaitReady();
+async function main() {
   const wsProvider = new WsProvider('wss://api.clover.finance');
-  //   const wsProvider = new WsProvider('wss://api-ivy-elastic.clover.finance');
-
-  const api = await ApiPromise.create({ provider: wsProvider, types: cloverTypes });
-
-  // await sleep(1000 * 1);
-
-  const PHRASE = 'pledge suit pyramid apple satisfy same sponsor search involve hello crystal grief';
-
-  const AARON = 'traffic wine leader wheat mom device kiwi great horn room remind office';
-
-  const keyring = new Keyring({ ss58Format: 42, type: 'auto' });
-
-  const alice = keyring.addFromUri(PHRASE + '//polkadot');
-
-  const aaron = keyring.addFromUri(AARON + '//polkadot');
-
-  console.log('alice:', alice.address);
-  console.log('alice.address', alice.address === '5EoKvCTnroB1niQHqhn7hzSPYryUoByaUaogkafq1m8ZK6nL');
-
-  const dest = alice;
-  const signer = alice;
-
-  const AMOUNT = new BigNumber(2).shiftedBy(18).toString();
-  console.log('AMOUNT', AMOUNT);
-
-  console.log('aaron: ', aaron.address);
-  const transfer = api.tx.balances.transfer('5FXH63iswGbuqCoSB8EYdJ9Tv7pV1PAhdAY7Sub2rrgcHqEB', AMOUNT);
-
-  const hash = await transfer.signAndSend(signer);
-
-  console.log(u8aToHex(hash));
-}
-
-async function multi() {
-  await cryptoWaitReady();
-
-  const wsProvider = new WsProvider();
 
   const api = await ApiPromise.create({ provider: wsProvider, types: cloverTypes });
 
@@ -68,8 +30,8 @@ async function multi() {
   console.log('extrinsic', extrinsic.toHuman());
 
   console.log('--------');
-  const txHash = await api.rpc.author.submitExtrinsic(extrinsic);
-  console.log(`txHash :  ${txHash}`);
+  // const txHash = await api.rpc.author.submitExtrinsic(extrinsic);
+  // console.log(`txHash :  ${txHash}`);
 
   const method = extrinsic.method.toHex();
   const sender = extrinsic.signer.toString();
@@ -137,10 +99,6 @@ async function multi() {
   // return;
   // const txHash = await api.rpc.author.submitExtrinsic(extrinsicHex);
   // console.log(`txHash :  ${txHash}`);
-}
-
-async function main() {
-  return multi();
 }
 
 main()
