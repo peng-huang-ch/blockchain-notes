@@ -1,16 +1,10 @@
 require('dotenv').config();
 const { Transaction } = require('@ethereumjs/tx');
 const { default: Common } = require('@ethereumjs/common');
-const { bufferToHex } = require('ethereumjs-util');
+const { bufferToHex, stripHexPrefix } = require('ethereumjs-util');
 const { default: BigNumber } = require('bignumber.js');
 
 const { PRIVATE_KEY } = process.env;
-const trimPrefix = (key, prefix = '0x') => {
-  if (key.startsWith(prefix)) {
-    key = key.slice(prefix.length);
-  }
-  return key;
-};
 
 function sendTx(web3, data) {
   return new Promise((resolve, reject) => {
@@ -42,7 +36,7 @@ async function main() {
   const amount = new BigNumber(quantity).toString(16);
   const input =
     '0xa9059cbb000000000000000000000000' + // token transfer method
-    trimPrefix(to) + // to address
+    stripHexPrefix(to) + // to address
     raw.substring(0, raw.length - amount.length) + // placeholder
     amount; // amount
 
