@@ -56,9 +56,17 @@ async function auto() {
   console.log(u8aToHex(hash));
 }
 
+async function getPeriodEra(period = 1) {
+  const signedBlock = await api.rpc.chain.getBlock();
+  const blockNumber = signedBlock.block.header.number;
+  const blockHash = signedBlock.block.header.hash;
+  const era = api.createType('ExtrinsicEra', { current: blockNumber, period: 1 });
+}
 async function multi() {
   // await cryptoWaitReady();
-  const wsProvider = new WsProvider('wss://api.clover.finance');
+  var wsProvider = new WsProvider('wss://api.clover.finance');
+  // var wsProvider = new WsProvider('wss://rpc.polkadot.io');
+
   //   const wsProvider = new WsProvider('wss://api-ivy-elastic.clover.finance');
 
   const api = await ApiPromise.create({ provider: wsProvider, types: cloverTypes });
@@ -83,6 +91,7 @@ async function multi() {
 
   const result = await api.query.system.account(signer.address);
   const { nonce } = result;
+  console.log('nonce: ', nonce.toNumber());
 
   // const tx = api.tx.balances.transfer(dest.address, AMOUNT).signFake(signer.address, {
   // genesisHash: api.genesisHash,
@@ -93,12 +102,12 @@ async function multi() {
   // signer: signer,
   // });
 
-  const tx = api.tx.balances.transfer('5FterzLiBPS4cAFa3Man8rYpoLLDRVFxvGSygD8gpvF1Gz5f', AMOUNT);
+  var tx = api.tx.balances.transfer('5HhZWYeLNRbpofy4F34vVENgwxQVE8HGWhprVE6MPPCqUdRn', AMOUNT);
 
-  const txhash = await tx.signAndSend(signer);
-  console.log('txHash', u8aToHex(txhash));
-  console.log('tx', tx.toHex());
-  return;
+  var era = await getPeriodEra(1);
+  // console.log('txHash', u8aToHex(txhash));
+  // console.log('tx', tx.toHex());
+
   // const txHash_1 = await tx.send();
   // console.log('txHash_1', txHash_1);
   // return;
@@ -107,8 +116,10 @@ async function multi() {
   const wrapper = api.createType('SignerPayload', {
     method: tx.method.toHex(),
     nonce,
+    blockHash,
+    blockNumber,
+    era,
     genesisHash: api.genesisHash,
-    blockHash: api.genesisHash,
     runtimeVersion: api.runtimeVersion,
     version: api.extrinsicVersion,
     address: signer.address,
@@ -144,39 +155,21 @@ async function multi() {
   tx.addSignature(signer.address, placeholder, wrapper.toPayload());
 
   const signature = u8aToHex(signer.sign(hexToU8a(wrapper.toRaw().data), { withType: true }));
-  // console.log('signature', signature.length);
 
-  const serialized = tx.toHex();
-  const realSerialized = serialized.replace(placeholder.slice(2), signature.slice(2));
+  var serialized = tx.toHex();
+  var realSerialized = serialized.replace(placeholder.slice(2), signature.slice(2));
+  console.log('realSerialized :', realSerialized);
 
-  const extrinsic = api.createType('Extrinsic', realSerialized);
-  console.log('extrinsic.hex   : ', extrinsic.toHex());
-  console.log('extrinsic.method: ', extrinsic.method.toHuman());
-  console.log('extrinsic', extrinsic.toHuman());
-  console.log('--------');
-  console.log(extrinsic.toString());
+  var extrinsic = api.createType('Extrinsic', realSerialized);
 
-  console.log('- extrinsic._raw.signature', extrinsic._raw.signature.nonce.toHuman());
   console.log('- extrinsic.method', extrinsic.method.toHuman());
-  console.log('- extrinsic', extrinsic.toHuman());
+  console.log('- extrinsic    : ', extrinsic.toHuman());
+  console.log('- extrinsic hex:', extrinsic.toHex());
+  console.log('- extrinsic era:', extrinsic.era.toHuman());
+  console.log('- extrinsic period   :', extrinsic.era?.isMortalEra ? extrinsic.era.asMortalEra?.period.toNumber() : extrinsic.era.asImmortalEra);
 
-  const txWrapper = api.createType('SignerPayload', {
-    ...wrapper,
-    nonce: '1000',
-  });
-  console.log('extrinsic.signer.value : ', extrinsic.signer.value);
-  extrinsic.addSignature(u8aToHex(extrinsic.signer.toU8a()), placeholder, txWrapper.toPayload());
-  console.log('- extrinsic.method', extrinsic.method.toHuman());
-  console.log('- extrinsic  ', extrinsic.toHuman());
-  console.log('- extrinsic  ', extrinsic.toHex());
-  // const recover = api.createType('SignerPayload', {
-  //   ...extrinsic,
-  //   method: extrinsic.method.toHex(),
-  //   nonce: extrinsic.nonce,
-  //   era: extrinsic.era,
-  // });
-  // console.log('tx info', recover.toHuman());
-  // return;
+  console.log('extrinsic', extrinsic.toHex());
+
   const txHash = await api.rpc.author.submitExtrinsic(extrinsic);
   console.log(`txHash :  ${txHash}`);
 
