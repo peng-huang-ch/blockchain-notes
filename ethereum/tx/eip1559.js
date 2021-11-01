@@ -38,6 +38,11 @@ web3.eth.customRPC = function (opts) {
   newMethod.setRequestManager(_this._requestManager, _this.accounts);
 };
 
+/**
+ * fee = gasLimit * gasPrice
+ * gasPrice = BaseFeePerGas + MaxPriorityFeePerGas
+ * @returns
+ */
 async function main() {
   const from = '0xd73d9AA55ABBd6CFbeD3e9Ad7f8Be2f6D83C70dC';
   const to = '0x370BA1dc25C07d0C77Ba9b83fcc75Fcc2a0aC243';
@@ -47,6 +52,17 @@ async function main() {
 
   const common = new Common({ chain: 'ropsten', hardfork: Hardfork.London });
   const txOptions = { common };
+
+  var txData = {
+    data: '0x',
+    from: '0xd73d9AA55ABBd6CFbeD3e9Ad7f8Be2f6D83C70dC',
+    to: '0xd73d9AA55ABBd6CFbeD3e9Ad7f8Be2f6D83C70dC',
+    value: quantity,
+    common,
+  };
+
+  var estimateGas = await web3.eth.estimateGas(txData);
+  console.log('estimateGas', estimateGas);
 
   const raw = '0000000000000000000000000000000000000000000000000000000000000000';
   const amount = new BigNumber(quantity).toString(16);
@@ -58,8 +74,8 @@ async function main() {
 
   const nonce = await web3.eth.getTransactionCount(from);
   const gasPrice = await web3.eth.getGasPrice();
-  console.log('gasPrice', gasPrice);
-  const estimateGas = await web3.eth.estimateGas({
+
+  var estimateGas = await web3.eth.estimateGas({
     // from,
     to: tokenAddress,
     data: input,
@@ -68,31 +84,36 @@ async function main() {
     common,
   });
   console.log('estimateGas', estimateGas);
+
   web3.eth.customRPC({ name: 'maxPriorityFeePerGas', call: 'eth_maxPriorityFeePerGas' });
-  // const maxPriorityFeePerGas = await web3.eth.maxPriorityFeePerGas();
-  const gasLimit = new BigNumber(estimateGas).toString();
+  const maxPriorityFeePerGas = await web3.eth.maxPriorityFeePerGas();
+  const gasLimit = toBN(estimateGas);
   console.log('gasLimit', gasLimit);
 
   const block = await web3.eth.getBlock('pending');
   const baseFeePerGas = block['baseFeePerGas'];
-  const maxPriorityFeePerGas = '0x9502F900'; // 2.5 Gwei
-  const maxFeePerGas = toHex(toBN(baseFeePerGas).mul(toBN(2)).add(toBN(maxPriorityFeePerGas)));
+  const maxFeePerGas = toBN(baseFeePerGas).add(toBN(maxPriorityFeePerGas));
   const txData = {
     from,
     to: tokenAddress,
     data: input,
     value: '0x00',
     nonce: nonce ? '0x' + new BigNumber(nonce).toString(16) : '0x',
-    // gasLimit: '0x' + new BigNumber(gasLimit).toString(16),
 
-    // maxFeePerGas: '0x' + new BigNumber(gasLimit).toString(16),
-    // maxPriorityFeePerGas: '0x' + new BigNumber(gasLimit).toString(16),
-    // maxPriorityFeePerGas: '0x' + new BigNumber(maxPriorityFeePerGas).toString(16),
-    // maxFeePerGas: '0x' + new BigNumber(maxFeePerGas).toString(16),
     maxPriorityFeePerGas: '0x9502f900',
-    maxFeePerGas: '0x9507e4d8',
-    gasLimit: '0x89d0',
+    maxFeePerGas: toHex(maxFeePerGas),
+    gasLimit: toHex(gasLimit),
   };
+
+  Object.assign(txData, {
+    maxPriorityFeePerGas: toHex(maxPriorityFeePerGas),
+    maxFeePerGas: toHex(maxFeePerGas),
+    gasLimit,
+    nonce,
+  });
+
+  console.log('maxPriorityFeePerGas    : ', toBN(maxPriorityFeePerGas).toString());
+  console.log('maxFeePerGas            : ', toBN(maxFeePerGas).toString());
   console.log('txData', txData);
   const tx = Transaction.fromTxData(txData, txOptions);
   const serialized = tx.serialize().toString('hex');
@@ -102,7 +123,7 @@ async function main() {
   console.log('serialized: ', serialized);
 
   const privatekey = Buffer.from(PRIVATE_KEY, 'hex');
-  // return;
+
   const signedTx = tx.sign(privatekey);
   const serializedTx = signedTx.serialize();
 
