@@ -1,8 +1,31 @@
 {
   "name": "crypto-notes",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "BlockChain notes",
   "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "author": "h499871809@gmail.com",
+  "bugs": {
+    "url": "https://github.com/peng-huang-cc/crypto-notes/issues"
+  },
+  "homepage": "https://github.com/peng-huang-cc/crypto-notes#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/peng-huang-cc/crypto-notes.git"
+  },
+  "keywords": [
+    "avalanche",
+    "bitcoin",
+    "cardano",
+    "cosmos",
+    "ethereum",
+    "polkadot",
+    "ripple",
+    "stellar",
+    "tron"
+  ],
   "dependencies": {
     "@bitgo/utxo-lib": "^1.9.4",
     "@bitgo/utxo-lib-v2": "npm:@bitgo/utxo-lib@^2.1.0",
@@ -59,16 +82,5 @@
   },
   "scripts": {
     "test": "jest --config ./jest.config.json -i"
-  },
-  "description": "",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/peng-huang-cc/crypto-notes.git"
-  },
-  "keywords": [],
-  "author": "",
-  "bugs": {
-    "url": "https://github.com/peng-huang-cc/crypto-notes/issues"
-  },
-  "homepage": "https://github.com/peng-huang-cc/crypto-notes#readme"
+  }
 }
