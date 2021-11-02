@@ -5,6 +5,7 @@
   "license": "MIT",
   "dependencies": {
     "@bitgo/utxo-lib": "^1.9.4",
+    "@bitgo/utxo-lib-v2": "npm:@bitgo/utxo-lib@^2.1.0",
     "@clover-network/node-types": "^1.0.4",
     "@cosmjs/amino": "^0.25.6",
     "@cosmjs/proto-signing": "^0.25.6",

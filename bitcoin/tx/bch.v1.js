@@ -1,7 +1,10 @@
+require('dotenv').config();
+
 const rp = require('request-promise');
 const coinSelect = require('coinselect');
 const { Transaction, TransactionBuilder, networks, ECPair, script } = require('@bitgo/utxo-lib');
-const bitcore = require('bitcore-lib-cash');
+
+var secret = process.env.ECDSA_SECRET;
 
 async function getUTXOS(address, bitcoreURI = 'https://api.bitcore.io/api/BCH/testnet') {
   return rp({
@@ -16,7 +19,8 @@ async function getUTXOS(address, bitcoreURI = 'https://api.bitcore.io/api/BCH/te
 
 async function buildTx(input) {
   const network = networks.bitcoincashTestnet;
-  const keyPair = ECPair.fromPrivateKeyBuffer(Buffer.from('5b27614b1b752645219e44890ae2402c6608cf3c2afce30bd1e45914776e50f3', 'hex'), network);
+
+  const keyPair = ECPair.fromPrivateKeyBuffer(Buffer.from(secret, 'hex'), network);
 
   const amount = input.value - 1000;
 
