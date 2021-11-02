@@ -2,10 +2,6 @@ const axios = require('axios');
 const { Seed, WalletServer } = require('cardano-wallet-js');
 
 async function main() {
-  // let walletServer = WalletServer.init('https://mainnet-prod.invault.space/ada');
-  // let information = await walletServer.getNetworkInformation();
-  // console.log(information);
-
   // let recoveryPhrase = Seed.generateRecoveryPhrase();
   // console.log('recoveryPhrase: ', recoveryPhrase);
   // let mnemonic_sentence = Seed.toMnemonicList(recoveryPhrase);
