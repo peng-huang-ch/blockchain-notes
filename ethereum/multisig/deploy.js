@@ -77,10 +77,6 @@ const pubs = [
   '0377155e520059d3b85c6afc5c617b7eb519afadd0360f1ef03aff3f7e3f5438dd', //
   '02f44bce3eecd274e7aa24ec975388d12905dfc670a99b16e1d968e6ab5f69b266',
 ];
-const privateKey = Buffer.from(
-  '2ef4813a7b4181f6b0eb57fa4b980740cbd4d827da81c39324870ee3368da087', //
-  'hex'
-);
 
 const provider = 'https://kovan.infura.io/v3/de9290b603fc4609a6f0a65e23e8c7d3';
 const web3 = new Web3(provider);
