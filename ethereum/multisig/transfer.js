@@ -3,7 +3,7 @@ const Web3 = require('web3');
 const BigNumber = require('bignumber.js');
 const Contract = require('web3-eth-contract');
 const { default: Common } = require('@ethereumjs/common');
-// const { bufferToHex, pubToAddress, toChecksumAddress } = require('ethereumjs-util');
+const { bufferToHex } = require('ethereumjs-util');
 
 const ABI = require('ethereumjs-abi');
 const util = require('ethereumjs-util');
@@ -37,14 +37,12 @@ function getSha3ForConfirmationTx(prefix, toAddress, quantity, data, expireTime,
 const serializeSignature = ({ r, s, v }) => '0x' + Buffer.concat([r, s, Buffer.from([v])]).toString('hex');
 
 // https://github.com/BitGo/eth-multisig-v2/blob/8544002d078d6bebcff4017fda7b40a534087bbe/test/walletsimple.js#L285
-async function main({ web3, from, to, quantity, chainId, common, proposerPrivateKey, sender, senderPrivateKey }) {
+async function main({ web3, from, to, quantity, common, proposerPrivateKey, sender, senderPrivateKey }) {
   const sequenceId = await web3.eth.call({
     to: from,
     data: '0xa0b7967b',
   });
-
   const expireTime = Math.ceil(new Date().getTime() / 1000) + 600; // 600 seconds
-  const data = '0x';
   const operationHash = getSha3ForConfirmationTx(
     'ETHER', //
     to,
@@ -56,7 +54,9 @@ async function main({ web3, from, to, quantity, chainId, common, proposerPrivate
 
   const sig = util.ecsign(operationHash, proposerPrivateKey);
 
+  const data = '0x';
   const input = contract.methods.sendMultiSig(to, quantity, data, expireTime, sequenceId, serializeSignature(sig)).encodeABI();
+
   const nonce = await web3.eth.getTransactionCount(sender);
   const gasPrice = await web3.eth.getGasPrice();
 
@@ -87,14 +87,14 @@ async function main({ web3, from, to, quantity, chainId, common, proposerPrivate
   console.log('hash', hash);
 }
 
-const provider = 'https://kovan.infura.io/v3/de9290b603fc4609a6f0a65e23e8c7d3';
+const provider = 'https://ropsten.infura.io/v3/de9290b603fc4609a6f0a65e23e8c7d3';
 const web3 = new Web3(provider);
-const common = new Common({ chain: 'kovan' });
-const from = '0x317028fb803594ebcc310481303965f984fb3e19';
+const common = new Common({ chain: 'ropsten' });
+const from = '0xDb8bC0A6856320b103e65aF8b93b60c31bbb3aC3';
 const to = '0x370BA1dc25C07d0C77Ba9b83fcc75Fcc2a0aC243';
 
 const { PROPOSER_PRIVATE_KEY, SENDER_PRIVATE_KEY } = process.env;
-const quantity = new BigNumber(0.0001).shiftedBy(18).toFixed();
+const quantity = new BigNumber(0.0001).shiftedBy(18).toString();
 
 const sender = '0x370BA1dc25C07d0C77Ba9b83fcc75Fcc2a0aC243';
 const senderPrivateKey = Buffer.from(
@@ -114,7 +114,7 @@ main({
 
   web3,
   common,
-  chainId: 42,
+  chainId: 3,
   proposerPrivateKey,
   sender,
   senderPrivateKey,
