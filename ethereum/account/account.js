@@ -1,8 +1,9 @@
+require('dotenv').config();
 const { privateToAddress, privateToPublic, isValidPrivate, publicToAddress, toChecksumAddress } = require('ethereumjs-util');
 const { ec: EC } = require('elliptic');
 const ec = new EC('secp256k1');
-
-const privateKey = Buffer.from('e112748fdb8f743fbbb6412f6067966f9bef0fc315309715034a864fc8b67c62', 'hex');
+const { PRIVATE_KEY } = process.env;
+const privateKey = Buffer.from(PRIVATE_KEY, 'hex');
 
 const publicKey = privateToPublic(privateKey);
 const address = privateToAddress(privateKey);
