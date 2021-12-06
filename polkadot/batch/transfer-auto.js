@@ -1,18 +1,17 @@
+require('dotenv').config();
 const cloverTypes = require('@clover-network/node-types');
 const { ApiPromise, WsProvider, Keyring } = require('@polkadot/api');
 const { u8aToHex, hexToU8a, formatBalance } = require('@polkadot/util');
 const { blake2AsU8a } = require('@polkadot/util-crypto');
 const BigNumber = require('bignumber.js');
+const { PHRASE, AARON } = process.env;
 
-async function main() {
+async function main () {
   // await cryptoWaitReady();
   const wsProvider = new WsProvider('wss://api.clover.finance');
 
   const api = await ApiPromise.create({ provider: wsProvider, types: cloverTypes });
 
-  const PHRASE = 'pledge suit pyramid apple satisfy same sponsor search involve hello crystal grief';
-
-  const AARON = 'traffic wine leader wheat mom device kiwi great horn room remind office';
 
   const keyring = new Keyring({ ss58Format: 42, type: 'ecdsa' });
 

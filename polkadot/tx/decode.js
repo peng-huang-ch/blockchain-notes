@@ -4,7 +4,7 @@ const { u8aToHex, hexToU8a, formatBalance } = require('@polkadot/util');
 const { blake2AsU8a } = require('@polkadot/util-crypto');
 const BigNumber = require('bignumber.js');
 
-function print(result, now) {
+function print (result, now) {
   const { nonce, data: balance } = result;
   console.log(`${now}: balance of ${balance.free} and a nonce of ${nonce}`);
 
@@ -12,7 +12,7 @@ function print(result, now) {
   console.log(formatBalance(balance.free, { withUnit: 'CLV', withSi: true }, 18));
 }
 
-async function main() {
+async function main () {
   const wsProvider = new WsProvider('wss://api.clover.finance');
 
   const api = await ApiPromise.create({ provider: wsProvider, types: cloverTypes });
@@ -30,6 +30,7 @@ async function main() {
   console.log('extrinsic', extrinsic.toHuman());
 
   console.log('--------');
+  return;
   // const txHash = await api.rpc.author.submitExtrinsic(extrinsic);
   // console.log(`txHash :  ${txHash}`);
 

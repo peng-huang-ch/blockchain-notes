@@ -1,18 +1,14 @@
+require('dotenv').config();
 const cloverTypes = require('@clover-network/node-types');
 const { ApiPromise, WsProvider, Keyring } = require('@polkadot/api');
 const { u8aToHex, hexToU8a, formatBalance } = require('@polkadot/util');
 const { encodeMultiAddress, sortAddresses } = require('@polkadot/util-crypto');
+const { PHRASE, AARON, PHCC } = process.env;
 
 async function main () {
   // await cryptoWaitReady();
   const wsProvider = new WsProvider('wss://api.clover.finance');
   const api = await ApiPromise.create({ provider: wsProvider, types: cloverTypes });
-
-  const PHRASE = '';
-
-  const AARON = '';
-
-  const PHCC = '';
 
   // 1. Define relevant constants
   formatBalance.setDefaults({
@@ -66,89 +62,76 @@ async function main () {
   console.log('call method hash : ', call_method_hash.toHuman());
   console.log('call method hex  : ', call_method_hex);
 
-  // 5. Retrieve and unwrap the time point
-  const info = await api.query.multisig.multisigs(MULTISIG, call_method_hash);
-  // if (info.isSome) {
-  //   throw new Error('should be the first approval.');
-  // }
-  const TIME_POINT = null;
-
-  // 6. Send asMulti transaction
-  // Now the multisig call that was initiated by the Alice account
-  // to send 1 WND to Charlie can be approved by Bob.
-  // Since threshold is set to 2, this approval should dispatch the call
-  // (2 approvals received)
-  // 6. approveAsMulti
-  const txn = api.tx.multisig.approveAsMulti(
-    THRESHOLD,
-    otherSignatories, //
-    TIME_POINT,
-    call_method_hash,
-    MAX_WEIGHT
-  );
-
-  // const txhash = await tx.signAndSend(signer);
-  // console.log('txhash', u8aToHex(txhash));
-  // return;
-  const txs = Array.from(Array(50).keys()).map(() => call_method_hex);
+  const txs = [
+    call_method_hex,
+    call_method_hex,  //
+    // call_method_hex,
+    // call_method_hex,
+    // call_method_hex,
+  ];
 
   // // construct the batch and send the transactions
-  const online = api.tx.utility.batch(txs);
-  const offline = api.tx.utility.batch(txs);
-  console.log('online hex         : ', online.method.toHex());
-  console.log('offline hex        : ', offline.method.toHex());
-  console.log('online eq offline  : ', online.method.toHex() === offline.method.toHex());
+  const tx = api.tx.utility.batch(txs);
+  console.log('tx hex', tx.method.toHex());
+  // console.log('txn hex', txn.method.toHex());
+
+  // var submittable = await tx.signAsync(signer);
+
+  // console.log('serialized : ', u8aToHex(submittable.toHex()));
+
+  // var txHash = await api.rpc.author.submitExtrinsic(tx.toHex());
+  // console.log('txhash     : ', txHash)
+  // return;
 
 
-  // const { weight } = await tx.paymentInfo(signer.address);
-  // console.log('weight', weight.toNumber());
+  const { weight } = await tx.paymentInfo(signer.address);
+  console.log('weight', weight.toNumber());
+
+  // .signAndSend(signer);
+  console.log('threshold: ', THRESHOLD, otherSignatories);
 
   const { nonce } = await api.query.system.account(signer.address);
   console.log('nonce    : ', nonce.toNumber());
 
+  const signedBlock = await api.rpc.chain.getBlock();
+  const currentHeight = signedBlock.block.header.number;
+  const blockHash = signedBlock.block.header.hash.toHex();
+  const era = api.createType('ExtrinsicEra', { current: currentHeight, period });
+
   const payload = api.createType('SignerPayload', {
-    method: online.method.toHex(),
+    method: tx.method.toHex(),
     nonce: nonce.toNumber(),
     genesisHash: api.genesisHash,
     blockHash: api.genesisHash,
     runtimeVersion: api.runtimeVersion,
     version: api.extrinsicVersion,
     address: signer.address,
+    era,
   });
 
-  const { signature: online_signature } = api.createType('ExtrinsicPayload', payload.toPayload(), { version: api.extrinsicVersion }).sign(signer);
-  console.log('online signature   : ', online_signature);
-  online.addSignature(signer.address, online_signature, payload.toPayload());
-  const online_serialized = online.toHex();
-  console.log('online serialized  : ', online_serialized);
 
   const placeholder = '0x020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001';
-  offline.addSignature(signer.address, placeholder, payload.toPayload());
-  const data = payload.toRaw().data;
-  const signatureHash = data.length > 256 ? api.registry.hash(data).toHex() : data;
-  const offline_signature = u8aToHex(signer.sign(hexToU8a(signatureHash), { withType: true }));
+  // const { signature } = api.createType('ExtrinsicPayload', payload.toPayload(), { version: api.extrinsicVersion }).sign(signer);
+  tx.addSignature(signer.address, placeholder, payload.toPayload());
 
-  console.log('offline signature  : ', offline_signature);
+  const serialized = tx.toHex();
+  console.log('serialized', serialized);
 
-  const offline_hex = offline.toHex();
-  const offline_serialized = offline_hex.replace(placeholder.slice(2), offline_signature.slice(2));
-  console.log('online serialized', offline_serialized);
+  const signatureHash = payload.toRaw().data;
+  console.log('signatureHash  : ', signatureHash);
 
-  console.log('--signature--');
-  console.log('online       : ', online_signature);
-  console.log('offline      : ', offline_signature);
-  console.log('eq           : ', online_signature === offline_signature);
+  const signature = u8aToHex(signer.sign(hexToU8a(signatureHash), { withType: true }));
+  console.log('signature      : ', signature);
 
-  console.log('--serialized--');
-  console.log('online       : ', online_serialized);
-  console.log('offline      : ', offline_serialized);
-  console.log('eq           : ', online_serialized === offline_serialized);
-  const extrinsic = api.createType('Extrinsic', offline_serialized);
+  const hex = serialized.replace(placeholder.slice(2), signature.slice(2));
+  const extrinsic = api.createType('Extrinsic', hex);
   const extrinsicHex = extrinsic.toHex();
 
   console.log(`Signer address   : ${signer.address}`);
   console.log('extrinsicHex', extrinsicHex);
+
   // return;
+  console.log('extrinsicHex : ', extrinsicHex)
   var txHash = await api.rpc.author.submitExtrinsic(extrinsicHex);
   console.log(`txHash :  ${txHash}`);
   console.log(`Sending ${displayAmount} from ${MULTISIG} to ${dest.address}`);

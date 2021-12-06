@@ -12,7 +12,7 @@ const sleep = async (ns) => {
   });
 };
 
-function print(result, now) {
+function print (result, now) {
   const { nonce, data: balance } = result;
   console.log(`${now}: balance of ${balance.free} and a nonce of ${nonce}`);
 
@@ -20,7 +20,7 @@ function print(result, now) {
   console.log(formatBalance(balance.free, { withUnit: 'CLV', withSi: true }, 18));
 }
 
-async function auto() {
+async function auto () {
   // await cryptoWaitReady();
   const wsProvider = new WsProvider('wss://api.clover.finance');
   //   const wsProvider = new WsProvider('wss://api-ivy-elastic.clover.finance');
@@ -56,13 +56,13 @@ async function auto() {
   console.log(u8aToHex(hash));
 }
 
-async function getPeriodEra(period = 1) {
+async function getPeriodEra (period = 1) {
   const signedBlock = await api.rpc.chain.getBlock();
   const blockNumber = signedBlock.block.header.number;
   const blockHash = signedBlock.block.header.hash;
   const era = api.createType('ExtrinsicEra', { current: blockNumber, period: 1 });
 }
-async function multi() {
+async function multi () {
   // await cryptoWaitReady();
   var wsProvider = new WsProvider('wss://api.clover.finance');
   // var wsProvider = new WsProvider('wss://rpc.polkadot.io');
@@ -207,7 +207,7 @@ async function multi() {
   // console.log(`txHash :  ${txHash}`);
 }
 
-async function main() {
+async function main () {
   return multi();
 }
 
