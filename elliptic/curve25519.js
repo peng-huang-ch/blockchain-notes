@@ -1,13 +1,15 @@
-const { eddsa: EdDSA } = require('elliptic');
+const { ec: EC } = require('elliptic');
 const { hexToU8a } = require('@polkadot/util');
 const { stripHexPrefix } = require('ethjs-util');
-const ec = new EdDSA('curve25519');
+const ec = new EC('curve25519');
 
-var secret = process.env.EDDSA_SECRET;
-var priKey = ec.keyFromSecret(hexToU8a(secret));
+var secret = process.env.CURVE_25519_SECRET;
+
+var secret = '';
+var priKey = ec.keyFromPrivate(hexToU8a(secret));
 var pubKey = priKey.getPublic('hex');
 console.log('pubKey: ', pubKey);
-
+return;
 var key = ec.keyFromSecret(hexToU8a(secret)); // hex string, array or Buffer
 // Sign the message's hash (input must be an array, or a hex-string)
 

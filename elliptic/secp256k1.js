@@ -3,7 +3,7 @@ const { ecsign, toBuffer, bufferToHex, stripHexPrefix } = require('ethereumjs-ut
 const EC = require('elliptic').ec;
 const ec = new EC('secp256k1');
 
-function canonical({ r, s, recoveryParam }) {
+function canonical ({ r, s, recoveryParam }) {
   if (s.cmp(ec.nh) > 0) {
     s = ec.n.sub(s);
     recoveryParam ^= 1;
@@ -11,7 +11,7 @@ function canonical({ r, s, recoveryParam }) {
   return { r, s, recoveryParam };
 }
 
-function display(signature) {
+function display (signature) {
   const r = toBuffer(signature.r);
   const s = toBuffer(signature.s);
   const v = toBuffer(signature.recoveryParam);
@@ -22,13 +22,15 @@ function display(signature) {
   console.log('r + s + v: ', Buffer.concat([r, s, v]).toString('hex'));
 }
 
-var secret = process.env.ECDSA_SECRET;
-var msg = '0d8ceb29a3a6e540ca91af5db2f033831d9c5564dabe43ac41eb2574c65cdb40';
+var secret = '41686b77ae34a06df617dde217d6f2ad286223a8596dd4e2d00d81dc8218b72c';
+var msg = '0f555ff76600d72613417599a74db3a6e159000f96c770ed37d99e9deb429ae1';
 var privKey = Buffer.from(secret, 'hex');
 var signature = ec.sign(msg, privKey);
 
+const pair = ec.keyFromPrivate(privKey);
+console.log('pub hex : ', pair.getPublic('hex'));
 display(signature);
-
+return;
 var canonicalSignature = canonical(signature);
 console.log('---------------');
 console.log('-- canonical --');
