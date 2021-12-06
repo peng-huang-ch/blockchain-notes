@@ -38,13 +38,15 @@ const serializeSignature = ({ r, s, v }) => '0x' + Buffer.concat([r, s, Buffer.f
 
 // https://github.com/BitGo/eth-multisig-v2/blob/8544002d078d6bebcff4017fda7b40a534087bbe/test/walletsimple.js#L285
 async function main({ web3, from, to, quantity, tokenAddress, common, proposerPrivateKey, sender, senderPrivateKey }) {
-  // const sequenceId = await web3.eth.call({
-  //   to: from,
-  //   data: '0xa0b7967b',
-  // });
+  var sequenceId = await web3.eth.call({
+    to: from,
+    data: '0xa0b7967b',
+  });
+  console.log('sequenceId : ', sequenceId);
+
   // const expireTime = Math.ceil(new Date().getTime() / 1000) + 600; // 600 seconds
 
-  const sequenceId = 7;
+  var sequenceId = 7;
   const expireTime = 1625569571;
   const operationHash = getSha3ForConfirmationTokenTx(
     'ERC20', //
@@ -98,25 +100,25 @@ async function main({ web3, from, to, quantity, tokenAddress, common, proposerPr
   console.log('hash', hash);
 }
 
-const provider = 'https://kovan.infura.io/v3/de9290b603fc4609a6f0a65e23e8c7d3';
+const provider = 'https://ropsten.infura.io/v3/de9290b603fc4609a6f0a65e23e8c7d3';
 const web3 = new Web3(provider);
-const common = new Common({ chain: 'kovan' });
+const common = new Common({ chain: 'ropsten' });
 
-const from = '0x317028fb803594ebcc310481303965f984fb3e19';
-const to = '0x370BA1dc25C07d0C77Ba9b83fcc75Fcc2a0aC243';
-const tokenAddress = '0x5abe286f5ea6132b157cfd728834d493cbd43314';
+const from = '0x2ab5d8164cac7f006ed79817753eb9c9cfeaa093';
+const to = '0x8b67944F06DA3f68e0C97ff54d3b27D960134C63';
+const tokenAddress = '0x141f63c4ec6ee0c329cb476c88afe2a058fed642';
 const { PROPOSER_PRIVATE_KEY, SENDER_PRIVATE_KEY } = process.env;
-const quantity = new BigNumber(1).shiftedBy(18).toFixed();
+const quantity = new BigNumber(1).shiftedBy(16).toFixed();
 
 console.log('quantity', quantity);
-const sender = '0x370BA1dc25C07d0C77Ba9b83fcc75Fcc2a0aC243';
+const sender = '0x2ab5d8164cac7f006ed79817753eb9c9cfeaa093';
 const senderPrivateKey = Buffer.from(
   SENDER_PRIVATE_KEY, // sender private key
   'hex'
 );
 
 const proposerPrivateKey = Buffer.from(
-  PROPOSER_PRIVATE_KEY, // proposer private key
+  'e112748fdb8f743fbbb6412f6067966f9bef0fc315309715034a864fc8b67c62', // proposer private key
   'hex'
 );
 
@@ -128,7 +130,7 @@ main({
 
   web3,
   common,
-  chainId: 42,
+  chainId: 3,
   proposerPrivateKey,
   sender,
   senderPrivateKey,
