@@ -22,7 +22,7 @@ function display (signature) {
   console.log('r + s + v: ', Buffer.concat([r, s, v]).toString('hex'));
 }
 
-var secret = '41686b77ae34a06df617dde217d6f2ad286223a8596dd4e2d00d81dc8218b72c';
+var secret = process.env.ECDSA_SECRET;
 var msg = '0f555ff76600d72613417599a74db3a6e159000f96c770ed37d99e9deb429ae1';
 var privKey = Buffer.from(secret, 'hex');
 var signature = ec.sign(msg, privKey);

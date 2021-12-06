@@ -5,7 +5,6 @@ const ec = new EC('curve25519');
 
 var secret = process.env.CURVE_25519_SECRET;
 
-var secret = '';
 var priKey = ec.keyFromPrivate(hexToU8a(secret));
 var pubKey = priKey.getPublic('hex');
 console.log('pubKey: ', pubKey);
