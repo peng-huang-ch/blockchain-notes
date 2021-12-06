@@ -1,87 +1,134 @@
+require('dotenv').config();
+const { strict: assert } = require('assert');
 const cloverTypes = require('@clover-network/node-types');
 const { ApiPromise, WsProvider, Keyring } = require('@polkadot/api');
 const { u8aToHex, hexToU8a, formatBalance } = require('@polkadot/util');
-const { blake2AsU8a } = require('@polkadot/util-crypto');
-const BigNumber = require('bignumber.js');
+const { PHRASE, AARON, PHCC } = process.env;
 
-async function main() {
+console.log('process.env : ', process.env)
+async function main () {
   // await cryptoWaitReady();
   const wsProvider = new WsProvider('wss://api.clover.finance');
-
   const api = await ApiPromise.create({ provider: wsProvider, types: cloverTypes });
 
-  const PHRASE = 'pledge suit pyramid apple satisfy same sponsor search involve hello crystal grief';
+  // 1. Define relevant constants
+  formatBalance.setDefaults({
+    unit: 'CLV',
+    decimals: 18,
+  });
 
-  const AARON = 'traffic wine leader wheat mom device kiwi great horn room remind office';
+  // 2. Define relevant constants
+  const ss58Format = 42;
+  const THRESHOLD = 2;
+  const MAX_WEIGHT = 640000000;
+  const AMOUNT_TO_SEND = '10000';
+  const displayAmount = formatBalance(AMOUNT_TO_SEND);
 
-  const keyring = new Keyring({ ss58Format: 42, type: 'ecdsa' });
-
+  // 3. Initialize accounts
+  const keyring = new Keyring({ ss58Format: ss58Format, type: 'ecdsa' });
   const alice = keyring.addFromUri(PHRASE + '//polkadot');
-
   const aaron = keyring.addFromUri(AARON + '//polkadot');
+  const phcc = keyring.addFromUri(PHCC + '//polkadot');
 
   const signer = alice;
-  const dest = aaron;
+  const dest = alice;
 
-  console.log('alice: ', alice.address);
-  console.log('aaron: ', aaron.address);
 
-  //   const AMOUNT = new BigNumber(1.1).shiftedBy(18).toString();
+  // 4. Send 1 WND to dest account
+  const call = api.tx.balances.transfer(dest.address, AMOUNT_TO_SEND);
 
-  const txs = [
-    api.tx.balances.transfer(dest.address, 12345), //
-    api.tx.balances.transfer(dest.address, 22345),
-  ];
+  console.log('sender address   : ', alice.address);
+  console.log('dest   address   : ', dest.address);
+  console.log('call method hex -: ', call.method.toHex());
+  const call_method_hash = call.method.hash;
+  const call_method_hex = call.method.toHex();
+
+  console.log('call method hash : ', call_method_hash.toHuman());
+  console.log('call method hex  : ', call_method_hex);
+
+  const txs = Array.from(Array(2).keys()).map(() => call_method_hex);
 
   // construct the batch and send the transactions
-  const tx = api.tx.utility.batch(txs.map((tx) => tx.method.toHex()));
+  const online = api.tx.utility.batch(txs);
+  const offline = api.tx.utility.batch(txs);
+  console.log('online hex         : ', online.method.toHex());
+  console.log('offline hex        : ', offline.method.toHex());
+  console.log('online eq offline  : ', online.method.toHex() === offline.method.toHex());
 
-  // nonce
   const { nonce } = await api.query.system.account(signer.address);
   console.log('nonce    : ', nonce.toNumber());
 
-  // payload
-  const payload = api.createType('SignerPayload', {
-    method: tx.method.toHex(),
+  const period = 50;
+  const signedBlock = await api.rpc.chain.getBlock();
+  const currentHeight = signedBlock.block.header.number;
+  const blockHash = signedBlock.block.header.hash.toHex();
+  const era = api.createType('ExtrinsicEra', { current: currentHeight, period });
+
+  const options = {
+    method: online.method.toHex(),
     nonce: nonce.toNumber(),
     genesisHash: api.genesisHash,
     blockHash: api.genesisHash,
+
     runtimeVersion: api.runtimeVersion,
     version: api.extrinsicVersion,
     address: signer.address,
-  });
 
-  // console.log(' tx.toHex()        : ', tx.toHex());
-  // console.log(' tx.method.toHex() : ', tx.method.toHex());
+  }
+
+  Object.assign(options, { blockHash, blockNumber: currentHeight, era: era.toHex() });
+
+  const payload = api.createType('SignerPayload', options);
+
+  const { signature: online_signature } = api.createType('ExtrinsicPayload', payload.toPayload(), { version: api.extrinsicVersion }).sign(signer);
+  console.log('online signature   : ', online_signature);
+  online.addSignature(signer.address, online_signature, payload.toPayload());
+  const online_serialized = online.toHex();
+  console.log('online serialized  : ', online_serialized);
 
   const placeholder = '0x020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001';
-  // const { signature } = api.createType('ExtrinsicPayload', payload.toPayload(), { version: api.extrinsicVersion }).sign(signer);
-  tx.addSignature(signer.address, placeholder, payload.toPayload());
+  offline.addSignature(signer.address, placeholder, payload.toPayload());
 
-  const serialized = tx.toHex();
-  console.log('serialized', serialized);
+  const { data } = payload.toRaw();
+  console.log('offline data       : ', data);
+  console.log('offline data length: ', data.length);
 
-  const signatureHash = payload.toRaw().data;
-  console.log('signatureHash  : ', signatureHash);
+  var signatureHash = hexToU8a(data).length > 256 ? api.registry.hash(data).toHex() : data;
+  const signatureHashU8a = hexToU8a(signatureHash);
+  const signatureU8a = signer.sign(signatureHashU8a, { withType: true })
+  const offline_signature = u8aToHex(signatureU8a);
 
-  const signature = u8aToHex(signer.sign(hexToU8a(signatureHash), { withType: true }));
-  console.log('signature      : ', signature);
+  console.log('offline signature  : ', offline_signature);
 
-  const hex = serialized.replace(placeholder.slice(2), signature.slice(2));
-  const extrinsic = api.createType('Extrinsic', hex);
+  const offline_hex = offline.toHex();
+  const offline_serialized = offline_hex.replace(placeholder.slice(2), offline_signature.slice(2));
+  console.log('online serialized', offline_serialized);
+
+  console.log('--signature--');
+  console.log('online       : ', online_signature);
+  console.log('offline      : ', offline_signature);
+  console.log('eq           : ', online_signature === offline_signature);
+  assert(online_signature === offline_signature, 'signature should be the same');
+
+  console.log('--serialized--');
+  console.log('online       : ', online_serialized);
+  console.log('offline      : ', offline_serialized);
+
+  assert(online_serialized === offline_serialized, 'serialized should be the same');
+  const extrinsic = api.createType('Extrinsic', online_serialized);
   const extrinsicHex = extrinsic.toHex();
 
   console.log(`Signer address   : ${signer.address}`);
   console.log('extrinsicHex', extrinsicHex);
-  // return;
 
-  const txHash = await api.rpc.author.submitExtrinsic(extrinsicHex);
+  return;
+
+  var txHash = await api.rpc.author.submitExtrinsic(extrinsicHex);
   console.log(`txHash :  ${txHash}`);
+  console.log(`Sending ${displayAmount} from ${signer.address} to ${dest.address}`);
   console.log(`Signer address   : ${signer.address}`);
-  console.log(`Batch tx: https://clover-testnet.subscan.io/extrinsic/${txHash}`);
+  console.log(`Required values  : asMulti(THRESHOLD, otherSignatories, TIME_POINT, call.method.hash, MAX_WEIGHT)`);
+  console.log(`asMulti tx: https://clover-testnet.subscan.io/extrinsic/${txHash}`);
 }
 
-main()
-  .then()
-  .catch(console.error)
-  .finally(() => process.exit());
+main().catch(console.error).finally(process.exit);

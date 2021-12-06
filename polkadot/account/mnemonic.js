@@ -1,15 +1,8 @@
-const MNEMONIC = 'traffic wine leader wheat mom device kiwi great horn room remind office';
-const name = 'phcc';
-const password = 'ph.cc';
-const keypairType = 'sr25519';
-const address = '5DUCAgjGtjYZsfdF9US4NksiL7GWeMVizxnGzWZXdFRh9aUd';
-
-const cloverTypes = require('@clover-network/node-types');
 const { stringToU8a, u8aToHex } = require('@polkadot/util');
 const { cryptoWaitReady, mnemonicGenerate, mnemonicToMiniSecret, mnemonicValidate, naclKeypairFromSeed } = require('@polkadot/util-crypto');
 const { Keyring } = require('@polkadot/keyring');
 
-async function main() {
+async function main () {
   await cryptoWaitReady();
   const mnemonicAlice = mnemonicGenerate();
 
