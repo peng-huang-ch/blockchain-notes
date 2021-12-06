@@ -119,5 +119,3 @@ async function main() {
 }
 
 main().then().catch(console.error);
-
-// const xx = ;

@@ -118,7 +118,7 @@ const senderPrivateKey = Buffer.from(
 );
 
 const proposerPrivateKey = Buffer.from(
-  'e112748fdb8f743fbbb6412f6067966f9bef0fc315309715034a864fc8b67c62', // proposer private key
+  PROPOSER_PRIVATE_KEY, // proposer private key
   'hex'
 );
 

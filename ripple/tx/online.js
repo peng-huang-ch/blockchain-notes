@@ -14,36 +14,6 @@ const from_address = 'rfXgErjK96k59evDnC22zX7vRo2hYaSiqc';
 const secret = 'ssHAaRfvdDsF62da3dpDHgxHSnw4d';
 const dest_address = 'rUCzEr6jrEyMpjhs4wSdQdz4g8Y382NxfM';
 
-// const from_address = 'rDerjU2jeRvGmRDpfRoSFkbYen4dXzuSrH';
-// const secret = 'snQ8ipa9zdwX1taPZCmLq5RLNTrJR';
-// api
-//   .connect()
-//   .then(() => {
-//     return;
-//   })
-//   .then((info) => {
-//     console.log(info);
-//     console.log('getAccountInfo done');
-//   })
-//   .then(() => {
-//     const txJSON = JSON.stringify({
-//       TransactionType: 'Payment',
-//       Account: from_address,
-//       Amount: '2000000',
-//       Destination: dest_address,
-//     });
-
-//     const signed = api.sign(txJSON, secret);
-
-//     console.log('tx_blob is:', signed.signedTransaction);
-//     console.log('tx hash is:', signed.id);
-//   })
-//   .then(() => {})
-//   .then(() => {
-//     console.log('done and disconnected.');
-//   })
-//   .catch(console.error);
-
 async function main() {
   await api.connect();
 
