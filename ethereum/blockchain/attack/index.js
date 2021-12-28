@@ -222,8 +222,8 @@ async function double_spent(victim_uri, victim_ip, attack_uri) {
   console.log('new tx detail : ', newTx);
 }
 
-const victim_ip = '10.0.152.117';
-const victim_uri = 'http://10.0.152.117:8545/';
+const victim_ip = '10.0.152.116';
+const victim_uri = 'http://10.0.152.116:8545/';
 const attack_uri = 'http://127.0.0.1:8545/';
 
 async function main() {

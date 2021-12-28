@@ -9,7 +9,7 @@ abiDecoder.addABI(abi);
 const decodedData = abiDecoder.decodeMethod(input);
 // console.log('decodedData', decodedData);
 
-const provider = '';
+const provider = 'http://10.0.152.116/8545';
 const web3 = new Web3(provider);
 
 // const { toAscii, toUtf8 } = require('web3-utils');
@@ -17,23 +17,23 @@ const web3 = new Web3(provider);
 // console.log(toUtf8(input));
 
 // run this multiple times by putting in its own function
-const tokenContract = new web3.eth.Contract(abi, '0xdac17f958d2ee523a2206206994597c13d831ec7');
+const tokenContract = new web3.eth.Contract(abi, '0x189bd55B75c25a6479d092312b19A81Ce7AB7571');
 const methods = tokenContract.methods;
 const symbol = tokenContract.methods.symbol();
 // console.log('symbol : ', symbol.encodeABI());
 // return;
 console.log('tokenContract.methods', methods);
 // run this multiple times by putting in its own function
-async function getTokenInfo(tokenContract) {
+async function getTokenInfo() {
   const address = '0x2819c144d5946404c0516b6f817a960db37d4929';
   const [name, symbol, balance, balance2] = await Promise.all([
     tokenContract.methods.name().call(), //
     tokenContract.methods.symbol().call(), //
-    tokenContract.methods.balanceOf(address).call(), //
-    tokenContract.methods.balanceOf(address).call({}, 11621022), //
+    // tokenContract.methods.balanceOf(address).call(), //
+    // tokenContract.methods.balanceOf(address).call({}, 11621022), //
   ]);
-  const encode = methods.balanceOf(address).encodeABI({}, 11621022);
-  const encode2 = methods.balanceOf(address).encodeABI();
+  // const encode = methods.balanceOf(address).encodeABI({}, 11621022);
+  // const encode2 = methods.balanceOf(address).encodeABI();
 
   console.log('encode : ', encode);
   console.log('encode2: ', encode2);

@@ -1,6 +1,6 @@
 const { DirectSecp256k1HdWallet, decodePubkey } = require('@cosmjs/proto-signing');
 const { toBase64, toHex } = require('@cosmjs/encoding');
-const { pubkeyToRawAddress, pubkeyToAddress } = require('@cosmjs/amino');
+const { pubkeyType, pubkeyToAddress } = require('@cosmjs/amino');
 const { stringToPath } = require('@cosmjs/crypto');
 
 async function main() {
@@ -13,6 +13,10 @@ async function main() {
   console.log('pub', toBase64(pub));
   console.log('pub hex', toHex(pub));
 
+  const pubkey = {
+    type: pubkeyType.secp256k1,
+    value: toBase64(pub),
+  };
   const address = pubkeyToAddress(pubkey, 'cosmos');
   console.log('address', address);
   console.log(firstAccount);
