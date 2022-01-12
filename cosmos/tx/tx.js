@@ -1,4 +1,4 @@
-const { DirectSecp256k1HdWallet, Registry, makeAuthInfoBytes, encodePubkey, decodePubkey, makeSignDoc, makeSignBytes } = require('@cosmjs/proto-signing');
+const { DirectSecp256k1HdWallet, Registry, coins, makeAuthInfoBytes, encodePubkey, decodePubkey, makeSignDoc, makeSignBytes } = require('@cosmjs/proto-signing');
 const { toBase64, toHex, fromHex } = require('@cosmjs/encoding');
 const { encodeSecp256k1Pubkey } = require('@cosmjs/amino');
 const crypto = require('@cosmjs/crypto');
@@ -14,7 +14,7 @@ async function main() {
   const wallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic);
   const [firstAccount] = await wallet.getAccounts();
   console.log('firstAccount', firstAccount.address);
-  // const rpcEndpoint = 'http://10.0.152.117:26657/';
+
   const rpcEndpoint = 'https://rpc.testnet.cosmos.network:443';
   // const client = await StargateClient.connect(rpcEndpoint);
   const gasPrice = GasPrice.fromString('0.025uphoton');
@@ -46,6 +46,7 @@ async function main() {
       amount: [amount],
     },
   };
+
   const fee = { amount: [{ amount: '2000', denom: 'uphoton' }], gas: '80000' };
   const signerData = { accountNumber: 625, sequence: 7, chainId: 'cosmoshub-testnet' };
   const gasLimit = fee.gas;
@@ -63,7 +64,7 @@ async function main() {
   const pub = encodePubkey(encodeSecp256k1Pubkey(fromHex('025802f6b064ae8cd15053422905d304817c3418eb4e79f813e508127a8fc497c9')));
   const x = decodePubkey(pub);
   console.log(x, x.type);
-  return;
+  // return;
   const txAuthInfoBytes = makeAuthInfoBytes([pub], fee.amount, gasLimit, signerData.sequence);
   // const txAuthInfoBytes = makeAuthInfoBytes([pubkey], fee.amount, gasLimit, signerData.sequence);
   console.log('txBody', toHex(txBodyBytes));
