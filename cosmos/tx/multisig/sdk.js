@@ -1,15 +1,11 @@
 require('dotenv').config();
 const { strict: assert } = require('assert');
 
-const {
-  Secp256k1HdWallet,
-  coins,
-  assertIsBroadcastTxSuccess,
-} = require("@cosmjs/launchpad");
+const { Secp256k1HdWallet, coins, assertIsBroadcastTxSuccess } = require('@cosmjs/launchpad');
 
 const { createMultisigThresholdPubkey, encodeSecp256k1Pubkey, pubkeyType, pubkeyToAddress, makeCosmoshubPath } = require('@cosmjs/amino');
 const { SigningStargateClient, StargateClient, makeMultisignedTx } = require('@cosmjs/stargate');
-const { TxRaw } = require("cosmjs-types/cosmos/tx/v1beta1/tx");
+const { TxRaw } = require('cosmjs-types/cosmos/tx/v1beta1/tx');
 
 async function getMnemonicPubKeyAndAddress(mnemonic, prefix) {
   const wallet = await Secp256k1HdWallet.fromMnemonic(mnemonic, {
@@ -20,7 +16,6 @@ async function getMnemonicPubKeyAndAddress(mnemonic, prefix) {
   const address = pubkeyToAddress(secp256k1PubKey, prefix);
   return { wallet, pubkey: secp256k1PubKey, address };
 }
-
 
 async function signInstruction(mnemonic, instruction, prefix) {
   const wallet = await Secp256k1HdWallet.fromMnemonic(mnemonic, {
@@ -38,13 +33,7 @@ async function signInstruction(mnemonic, instruction, prefix) {
     chainId: instruction.chainId,
   };
 
-  const { bodyBytes, signatures } = await signingClient.sign(
-    address,
-    instruction.msgs,
-    instruction.fee,
-    instruction.memo,
-    signerData,
-  );
+  const { bodyBytes, signatures } = await signingClient.sign(address, instruction.msgs, instruction.fee, instruction.memo, signerData);
   return [pubkey, signatures[0], bodyBytes];
 }
 
@@ -69,7 +58,7 @@ async function main() {
 
   // balance
   const accountOnChain = await client.getAccount(multisigAddress);
-  assert(accountOnChain, "Account does not exist on chain");
+  assert(accountOnChain, 'Account does not exist on chain');
 
   const balance = await client.getBalance(multisigAddress, 'uphoton');
   console.log('balance', balance);
@@ -77,21 +66,21 @@ async function main() {
   const msgSend = {
     fromAddress: multisigAddress,
     toAddress: receipt,
-    amount: coins(2000, "uphoton"),
+    amount: coins(2000, 'uphoton'),
   };
   const msg = {
-    typeUrl: "/cosmos.bank.v1beta1.MsgSend",
+    typeUrl: '/cosmos.bank.v1beta1.MsgSend',
     value: msgSend,
   };
   const gasLimit = 200000;
 
   const fee = {
-    amount: coins(2000, "uphoton"),
+    amount: coins(2000, 'uphoton'),
     gas: gasLimit.toString(),
   };
 
   const chainId = await client.getChainId();
-  const memo = "happy";
+  const memo = 'happy';
   // On the composer's machine signing instructions are created.
   const signingInstruction = {
     accountNumber: accountOnChain.accountNumber,
@@ -100,23 +89,15 @@ async function main() {
     msgs: [msg],
     fee,
     memo,
-  }
+  };
 
-  const [
-    [pubkey0, signature0, bodyBytes],
-    [pubkey1, signature1],
-    [pubkey2, signature2],
-  ] = await Promise.all([AARON, PHCC, PENG].map(async (mnemonic) => signInstruction(mnemonic, signingInstruction, prefix)));
+  const [[pubkey0, signature0, bodyBytes], [pubkey1, signature1], [pubkey2, signature2]] = await Promise.all([AARON, PHCC, PENG].map(async (mnemonic) => signInstruction(mnemonic, signingInstruction, prefix)));
 
   const address0 = pubkeyToAddress(pubkey0, prefix);
   const address1 = pubkeyToAddress(pubkey1, prefix);
   const address2 = pubkeyToAddress(pubkey2, prefix);
 
-  var multisigPubkey = createMultisigThresholdPubkey(
-    [pubkey0, pubkey1, pubkey2],
-    threshold,
-    true,
-  );
+  var multisigPubkey = createMultisigThresholdPubkey([pubkey0, pubkey1, pubkey2], threshold, true);
   assert.equal(multisigAccountAddress, pubkeyToAddress(multisigPubkey, prefix), 'should be equal');
 
   const signedTx = makeMultisignedTx(
@@ -128,7 +109,7 @@ async function main() {
       [address0, signature0],
       [address1, signature1],
       // [address2, signature2],
-    ]),
+    ])
   );
 
   const result = await client.broadcastTx(Uint8Array.from(TxRaw.encode(signedTx).finish()));
