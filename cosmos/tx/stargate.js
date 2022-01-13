@@ -1,11 +1,10 @@
-const { DirectSecp256k1HdWallet } = require('@cosmjs/proto-signing');
-const { assertIsBroadcastTxSuccess, SigningStargateClient, StargateClient, Tendermint34Client, buildFeeTable, GasPrice } = require('@cosmjs/stargate');
-const { CommunityPoolSpendProposal } = require('@cosmjs/stargate/build/codec/cosmos/distribution/v1beta1/distribution');
+const { assertIsBroadcastTxSuccess, SigningStargateClient, GasPrice } = require('@cosmjs/stargate');
+const { Secp256k1HdWallet } = require('@cosmjs/amino');
 
 const mnemonic = 'spice review cycle among deal estate main sport fold source face avocado';
 
 async function main() {
-  const wallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic);
+  const wallet = await Secp256k1HdWallet.fromMnemonic(mnemonic);
   const [firstAccount] = await wallet.getAccounts();
   console.log('firstAccount', firstAccount.address);
   // const rpcEndpoint = 'http://10.0.152.117:26657/';
