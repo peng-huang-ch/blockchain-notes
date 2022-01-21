@@ -5,7 +5,7 @@ const { u8aToHex, hexToU8a, formatBalance } = require('@polkadot/util');
 const { encodeMultiAddress, sortAddresses } = require('@polkadot/util-crypto');
 const { PHRASE, AARON, PHCC } = process.env;
 
-async function main () {
+async function main() {
   // await cryptoWaitReady();
   const wsProvider = new WsProvider('wss://api.clover.finance');
   const api = await ApiPromise.create({ provider: wsProvider, types: cloverTypes });
