@@ -1,9 +1,12 @@
 require('dotenv').config();
+var { u8aToHex, hexToU8a, u8aConcat } = require('@polkadot/util');
 const { ecsign, toBuffer, bufferToHex, stripHexPrefix } = require('ethereumjs-util');
 const EC = require('elliptic').ec;
 const ec = new EC('secp256k1');
 
-function canonical ({ r, s, recoveryParam }) {
+const ecc = require('tiny-secp256k1');
+
+function canonical({ r, s, recoveryParam }) {
   if (s.cmp(ec.nh) > 0) {
     s = ec.n.sub(s);
     recoveryParam ^= 1;
@@ -11,7 +14,7 @@ function canonical ({ r, s, recoveryParam }) {
   return { r, s, recoveryParam };
 }
 
-function display (signature) {
+function display(signature) {
   const r = toBuffer(signature.r);
   const s = toBuffer(signature.s);
   const v = toBuffer(signature.recoveryParam);
@@ -28,8 +31,11 @@ var privKey = Buffer.from(secret, 'hex');
 var signature = ec.sign(msg, privKey);
 
 const pair = ec.keyFromPrivate(privKey);
-console.log('pub hex : ', pair.getPublic('hex'));
+console.log('pub hex : ', pair.getPublic(true, 'hex'));
 display(signature);
+
+var expected = ecc.sign(Buffer.from(msg, 'hex'), privKey);
+console.log('ecc : ', u8aToHex(expected));
 return;
 var canonicalSignature = canonical(signature);
 console.log('---------------');

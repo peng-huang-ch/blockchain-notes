@@ -1,12 +1,12 @@
-const { DirectSecp256k1HdWallet, decodePubkey } = require('@cosmjs/proto-signing');
 const { toBase64, toHex } = require('@cosmjs/encoding');
-const { pubkeyType, pubkeyToAddress } = require('@cosmjs/amino');
-const { stringToPath } = require('@cosmjs/crypto');
+const { Secp256k1HdWallet, makeCosmoshubPath, pubkeyType, pubkeyToAddress } = require('@cosmjs/amino');
 
 async function main() {
   const mnemonic = 'spice review cycle among deal estate main sport fold source face avocado';
-  const wallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, stringToPath("m/0'/1/2'/2/1000000000"), 'blub');
-  // const wallet = await DirectSecp256k1HdWallet.generate(12);
+  const wallet = await Secp256k1HdWallet.fromMnemonic(mnemonic, {
+    hdPaths: [makeCosmoshubPath(0)],
+  });
+
   console.log('wallet ', wallet.mnemonic);
   const [firstAccount] = await wallet.getAccounts();
   const pub = firstAccount.pubkey;
