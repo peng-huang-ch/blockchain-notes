@@ -1,99 +1,84 @@
-
-
 require('dotenv').config();
 const { strict: assert } = require('assert');
-const { fromBase64, fromHex, toHex } = require('@cosmjs/encoding');
+
+const { fromBase64, fromHex, toHex, Bech32 } = require('@cosmjs/encoding');
 const { coins, createMultisigThresholdPubkey, encodeSecp256k1Pubkey, pubkeyToAddress, makeCosmoshubPath } = require('@cosmjs/amino');
-const { AminoTypes, defaultRegistryTypes, assertIsDeliverTxSuccess, SigningStargateClient, StargateClient, makeMultisignedTx } = require('@cosmjs/stargate');
-const { Registry, makeAuthInfoBytes } = require('@cosmjs/proto-signing');
-const { Secp256k1HdWallet, makeSignDoc, serializeSignDoc } = require('@cosmjs/amino');
+const { assertIsDeliverTxSuccess, SigningStargateClient, StargateClient } = require('@cosmjs/stargate');
+const { makeCompactBitArray, makeMultisignedTx } = require('@cosmjs/stargate/build/multisignature');
+const { DirectSecp256k1HdWallet, Registry, makeAuthInfoBytes, encodePubkey, makeSignDoc } = require('@cosmjs/proto-signing');
+
+const Long = require("long");
 const { TxRaw, AuthInfo, Fee } = require("cosmjs-types/cosmos/tx/v1beta1/tx");
 const { SignMode } = require('cosmjs-types/cosmos/tx/signing/v1beta1/signing');
-const { Int53, } = require("@cosmjs/math");
-const crypto = require("@cosmjs/crypto")
-const aminoTypes = new AminoTypes();
-const registry = new Registry(defaultRegistryTypes);
+const multisig = require("cosmjs-types/cosmos/crypto/multisig/v1beta1/multisig");
 
 async function getMnemonicPubKeyAndAddress(mnemonic, prefix) {
-  const wallet = await Secp256k1HdWallet.fromMnemonic(mnemonic, {
+  const wallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, {
     hdPaths: [makeCosmoshubPath(0)],
   });
   const [account] = await wallet.getAccounts();
   const secp256k1PubKey = encodeSecp256k1Pubkey(account.pubkey);
   const address = pubkeyToAddress(secp256k1PubKey, prefix);
-  return { wallet, secp256k1PubKey, pubkey: toHex(account.pubkey), address };
+  return { wallet, pubkey: secp256k1PubKey, address };
 }
 
-async function makeAminoSignDoc(
-  messages,
-  fee,
-  memo,
-  signerData,
-) {
-  const { accountNumber, sequence, chainId } = signerData;
-  const msgs = messages.map((msg) => aminoTypes.toAmino(msg));
-  return makeSignDoc(msgs, fee, chainId, memo, accountNumber, sequence);
-}
-
-
-async function signInstruction(mnemonic, instruction, rpcEmd) {
-  const wallet = await Secp256k1HdWallet.fromMnemonic(mnemonic, {
+async function signInstruction(mnemonic, instruction, prefix, rpcEndpoint) {
+  const wallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, {
     hdPaths: [makeCosmoshubPath(0)],
   });
 
   const [account] = await wallet.getAccounts();
   const pubkey = encodeSecp256k1Pubkey(account.pubkey);
+  const address = pubkeyToAddress(pubkey, prefix);
 
   const signerData = {
     accountNumber: instruction.accountNumber,
     sequence: instruction.sequence,
     chainId: instruction.chainId,
   };
-
-  // const client = await SigningStargateClient.connectWithSigner(rpcEndpoint, wallet);
   // var txRaw = await client.signDirect(senderAddress, [sendMsg], fee, memo, signerData);
+  const client = await SigningStargateClient.connectWithSigner(rpcEndpoint, wallet);
+  const { bodyBytes, signatures } = await client.sign(address, instruction.msgs, instruction.fee, instruction.memo, signerData);
+  return [pubkey, signatures[0], bodyBytes];
+}
 
-  const signDoc = await makeAminoSignDoc(instruction.msgs, instruction.fee, instruction.memo, signerData);
-  const signMode = SignMode.SIGN_MODE_LEGACY_AMINO_JSON;
-
-  const [acc] = await wallet.getAccountsWithPrivkeys();
-  const { privkey } = acc;
-  const message = crypto.sha256(serializeSignDoc(signDoc));
-
-  const signature = await crypto.Secp256k1.createSignature(message, privkey);
-  const signatureBytes = new Uint8Array([...signature.r(32), ...signature.s(32)]);
-
-  console.log('pubkey     : ', toHex(account.pubkey));
-  console.log('message    : ', toHex(message));
-  console.log('signature  : ', toHex(signatureBytes));
-
-  const signed = signDoc;
-
-  const signedTxBody = {
-    messages: signed.msgs.map((msg) => aminoTypes.fromAmino(msg)),
-    memo: signed.memo,
+function makeDirectMultisignedTx(multisigPubkey, sequence, fee, bodyBytes, signatures) {
+  const addresses = Array.from(signatures.keys());
+  const prefix = Bech32.decode(addresses[0]).prefix;
+  const signers = Array(multisigPubkey.value.pubkeys.length).fill(false);
+  const signaturesList = new Array();
+  for (let i = 0; i < multisigPubkey.value.pubkeys.length; i++) {
+    const signerAddress = pubkeyToAddress(multisigPubkey.value.pubkeys[i], prefix);
+    const signature = signatures.get(signerAddress);
+    if (signature) {
+      signers[i] = true;
+      signaturesList.push(signature);
+    }
+  }
+  const signerInfo = {
+    publicKey: encodePubkey(multisigPubkey),
+    modeInfo: {
+      multi: {
+        bitarray: makeCompactBitArray(signers),
+        // modeInfos: signaturesList.map((_) => ({ single: { mode: SignMode.SIGN_MODE_DIRECT } })),
+      },
+    },
+    sequence: Long.fromNumber(sequence),
   };
-
-  const signedTxBodyEncodeObject = {
-    typeUrl: '/cosmos.tx.v1beta1.TxBody',
-    value: signedTxBody,
-  };
-
-  const signedTxBodyBytes = registry.encode(signedTxBodyEncodeObject);
-  const signedGasLimit = Int53.fromString(signed.fee.gas).toNumber();
-  const signedSequence = Int53.fromString(signed.sequence).toNumber();
-  const signedAuthInfoBytes = makeAuthInfoBytes([{ pubkey, sequence: signedSequence }], signed.fee.amount, signedGasLimit, signMode);
-  const signatures = [signatureBytes];
-  const authInfo = AuthInfo.decode(signedAuthInfoBytes);
-  // const { signerInfos, fee: authFee } = authInfo;
-
-  const tx = TxRaw.fromPartial({
-    bodyBytes: signedTxBodyBytes,
-    authInfoBytes: signedAuthInfoBytes,
-    signatures,
-  })
-
-  return [pubkey, signatures[0], signedTxBodyBytes, tx];
+  const authInfo = AuthInfo.fromPartial({
+    signerInfos: [signerInfo],
+    fee: {
+      amount: [...fee.amount],
+      gasLimit: Long.fromString(fee.gas),
+    },
+  });
+  const authInfoBytes = AuthInfo.encode(authInfo).finish();
+  const signedTx = TxRaw.fromPartial({
+    bodyBytes: bodyBytes,
+    authInfoBytes: authInfoBytes,
+    signatures: [multisig.MultiSignature.encode(multisig.MultiSignature.fromPartial({ signatures: signaturesList })).finish()],
+  });
+  return signedTx;
 }
 
 // https://github.com/cosmos/cosmjs/blob/c192fc9b95ef97e4afbf7f5b94f8e8194ae428a6/packages/stargate/src/multisignature.spec.ts#L175
@@ -107,26 +92,18 @@ async function main() {
   const multisigAccountAddress = 'cosmos18y4kun6wupgly9kja8awhnqpjhxt6hljyh85gq';
   const receipt = 'cosmos1mca888pm39ld9zjnaagrjcjmtm27w0tzzaydct';
 
-  const keys = await Promise.all([
-    AARON,
-    PHCC,  //phcc
-    PENG
-  ].map((mnemonic) => getMnemonicPubKeyAndAddress(mnemonic, prefix)));
+  const keys = await Promise.all([AARON, PHCC, PENG].map((mnemonic) => getMnemonicPubKeyAndAddress(mnemonic, prefix)));
 
-  const secp256k1PubKeys = keys.map((item) => item.secp256k1PubKey);
   const pubKeys = keys.map((item) => item.pubkey);
 
-
-  var multisigPubkey = createMultisigThresholdPubkey(secp256k1PubKeys, threshold, true);
+  var multisigPubkey = createMultisigThresholdPubkey(pubKeys, threshold, true);
   const multisigAddress = pubkeyToAddress(multisigPubkey, prefix);
   console.log('multisigAddress : ', multisigAddress);
 
-  // account
+  // balance
   const accountOnChain = await client.getAccount(multisigAddress);
   assert(accountOnChain, 'Account does not exist on chain');
-  console.log('accountOnChain : ', accountOnChain);
 
-  // balance
   const balance = await client.getBalance(multisigAddress, 'uphoton');
   console.log('balance', balance);
 
@@ -139,8 +116,6 @@ async function main() {
     typeUrl: '/cosmos.bank.v1beta1.MsgSend',
     value: msgSend,
   };
-
-  console.log('msg       : ', JSON.stringify(msg, null, 4));
   const gasLimit = 200000;
 
   const fee = {
@@ -166,7 +141,10 @@ async function main() {
     [pubkey1, signature1], //
     [pubkey2, signature2] //
   ] = await Promise.all(
-    [AARON, PHCC, PENG].map(async (mnemonic) => signInstruction(mnemonic, signingInstruction, rpcEndpoint)));
+    [AARON, PHCC, PENG].map(async (mnemonic) => signInstruction(mnemonic, signingInstruction, prefix, rpcEndpoint)));
+  console.log('pubkey0 : ', pubkey0);
+  console.log('pubkey1 : ', pubkey1);
+  console.log('pubkey2 : ', pubkey2);
   const address0 = pubkeyToAddress(pubkey0, prefix);
   const address1 = pubkeyToAddress(pubkey1, prefix);
   const address2 = pubkeyToAddress(pubkey2, prefix);
@@ -174,7 +152,7 @@ async function main() {
   var multisigPubkey = createMultisigThresholdPubkey([pubkey0, pubkey1, pubkey2], threshold, true);
   assert.equal(multisigAccountAddress, pubkeyToAddress(multisigPubkey, prefix), 'should be equal');
 
-  const signedTx = makeMultisignedTx(
+  const signedTx = makeDirectMultisignedTx(
     multisigPubkey,
     signingInstruction.sequence,
     signingInstruction.fee,
@@ -186,8 +164,7 @@ async function main() {
     ])
   );
   const tx = TxRaw.encode(signedTx).finish();
-  console.log('tx : ', toHex(tx));
-
+  // return;
   const result = await client.broadcastTx(tx);
   console.log('result : ', result);
   assertIsDeliverTxSuccess(result);
@@ -195,4 +172,5 @@ async function main() {
   console.log('tx : ', `https://api.testnet.cosmos.network/cosmos/tx/v1beta1/txs/${transactionHash}`);
 }
 
+// TODO now it's not working
 main().catch(console.error);

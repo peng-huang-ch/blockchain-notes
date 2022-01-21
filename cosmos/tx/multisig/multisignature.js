@@ -82,7 +82,9 @@ async function main() {
 
   // From here on, no private keys are required anymore. Any anonymous entity
   // can collect, assemble and broadcast.
-
+  console.log('pubkey0 : ', pubkey0);
+  console.log('pubkey1 : ', pubkey1);
+  console.log('pubkey2 : ', pubkey2);
   const multisigPubkey = createMultisigThresholdPubkey(
     [pubkey0, pubkey1, pubkey2, pubkey3, pubkey4],
     threshold,
@@ -95,7 +97,6 @@ async function main() {
   const address3 = pubkeyToAddress(pubkey3, prefix);
   const address4 = pubkeyToAddress(pubkey4, prefix);
 
-  const broadcaster = await StargateClient.connect(rpcEndpoint);
   const signedTx = makeMultisignedTx(
     multisigPubkey,
     signingInstruction.sequence,
@@ -109,7 +110,9 @@ async function main() {
       // [address4, signature4],
     ]),
   )
+
   // ensure signature is valid
+  const broadcaster = await StargateClient.connect(rpcEndpoint);
   const result = await broadcaster.broadcastTx(Uint8Array.from(TxRaw.encode(signedTx).finish()));
   console.log('result', result)
   assertIsBroadcastTxSuccess(result);
