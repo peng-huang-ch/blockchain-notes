@@ -3,6 +3,7 @@
     "chainId": 666,
     "homesteadBlock": 0,
     "eip150Block": 0,
+    "eip150Hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
     "eip155Block": 0,
     "eip158Block": 0,
     "byzantiumBlock": 0,
@@ -10,7 +11,8 @@
     "petersburgBlock": 0,
     "istanbulBlock": 0,
     "berlinBlock": 0,
-    "londonBlock": 0
+    "londonBlock": 0,
+    "ethash": {}
   },
   "alloc": {
     "0x0d5A689D6a973E945cbBfab37202A1788E5588E7": {
