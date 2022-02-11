@@ -68,8 +68,9 @@ async function main({ web3, sender, pubs, common }) {
   const serializedTx = signedTx.serialize();
   console.log('account  : ', bufferToHex(generateAddress(sender, toBuffer(nonce))));
   console.log('bufferToHex(serializedTx) : ', bufferToHex(serializedTx));
-  const hash = await sendTx(web3, bufferToHex(serializedTx));
-  console.log('hash', hash);
+  const address = toChecksumAddress(bufferToHex(generateAddress(from, new BN(txData.nonce!).toBuffer())));
+  // const hash = await sendTx(web3, bufferToHex(serializedTx));
+  // console.log('hash', hash);
 }
 
 const common = new Common({ chain: 'ropsten' });
