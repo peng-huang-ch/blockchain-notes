@@ -14,9 +14,11 @@ async function deploy({
 	privateKey
 }) {
 	const chain = Chain.Rinkeby;
-	const safeSingleton = getSafeSingletonDeployment({ chain });
+	const version = '1.3.0';
+	const safeSingleton = getSafeSingletonDeployment({ version });
 	const safeSingletonAddress = safeSingleton.networkAddresses[chain];
 	const safeSingletonABI = safeSingleton.abi;
+	console.log('safeSingleton : ', safeSingleton);
 
 	const proxyFactory = getProxyFactoryDeployment();
 	const proxyFactoryABI = proxyFactory.abi;
@@ -40,14 +42,14 @@ async function deploy({
 	];
 
 	const safeSingletonContract = new Contract(safeSingletonABI);
-	const inititalizer = safeSingletonContract.methods.setup(...params).encodeABI();
+	const initializer = safeSingletonContract.methods.setup(...params).encodeABI();
 
 	var saltNonce = Date.now();
 
 	const proxyFactoryContract = new Contract(proxyFactoryABI, proxyFactoryAddress);
 	proxyFactoryContract.setProvider(web3.currentProvider);
 
-	const input = proxyFactoryContract.methods.createProxyWithNonce(safeSingletonAddress, inititalizer, saltNonce).encodeABI();
+	const input = proxyFactoryContract.methods.createProxyWithNonce(safeSingletonAddress, initializer, saltNonce).encodeABI();
 
 	const gasLimit = '0x8b8d0';
 	const common = new Common({ chain: Chain.Rinkeby, hardfork: Hardfork.London });
@@ -80,11 +82,11 @@ async function deploy({
 
 	var salt = ethers.utils.solidityKeccak256(
 		["bytes32", "uint256"],
-		[ethers.utils.solidityKeccak256(["bytes"], [inititalizer]), saltNonce]
+		[ethers.utils.solidityKeccak256(["bytes"], [initializer]), saltNonce]
 	)
 	var address = ethers.utils.getCreate2Address(proxyFactoryAddress, salt, ethers.utils.keccak256(deploymentCode))
 	console.log('address 				: ', address);
-
+	return;
 	const hash = await sendTx(web3, bufferToHex(serialized));
 	console.log('hash', hash);
 }

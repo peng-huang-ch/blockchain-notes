@@ -142,8 +142,8 @@ async function exec_erc20_1_2({
 
 	const gasLimit = await web3.eth.estimateGas({
 		from: sender,
-		to: multiSigAddress,
 		nonce,
+		to: multiSigAddress,
 		data: input,
 		value: '0x00',
 	});
@@ -188,6 +188,8 @@ async function exec_erc20_1_2({
 }
 
 
+// init variables
+
 exec_eth_1_2({
 	web3,
 	sender,
@@ -195,7 +197,6 @@ exec_eth_1_2({
 	privateKey,
 	multiSigAddress,
 }).catch(console.error);
-return;
 
 exec_erc20_1_2({
 	web3,

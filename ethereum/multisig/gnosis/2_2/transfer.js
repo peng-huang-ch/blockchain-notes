@@ -117,7 +117,7 @@ async function exec_eth_2_2({
 	console.log('txid 		: ', toHex(txHash));
 	console.log('serialized : ', bufferToHex(serialized));
 	console.log('sender 	: ', sender);
-	// return;
+	return;
 	const hash = await sendTx(web3, bufferToHex(serialized));
 	console.log('hash', hash);
 }
@@ -242,6 +242,8 @@ async function exec_erc20_2_2({
 	console.log('hash', hash);
 }
 
+
+// init variables
 
 // exec_eth_2_2({
 // 	web3,
