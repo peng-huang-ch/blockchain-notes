@@ -1,8 +1,6 @@
 // https://github.com/gnosis/safe-react/blob/5020c0daa31ecc0f26520f206deda5393502ad30/src/logic/safe/store/actions/createTransaction.ts#L53
 const assert = require('assert');
 const Web3 = require('web3');
-const ethers = require('ethers');
-const InputDataDecoder = require('ethereum-input-data-decoder');
 const Web3Method = require('web3-core-method');
 const { FeeMarketEIP1559Transaction: Transaction } = require('@ethereumjs/tx');
 const { default: Common, Chain, Hardfork } = require('@ethereumjs/common');
@@ -218,7 +216,7 @@ async function exec_erc20({
 	const block = await web3.eth.getBlock('pending');
 	const baseFeePerGas = block['baseFeePerGas'];
 	const maxFeePerGas = toBN(baseFeePerGas).add(toBN(maxPriorityFeePerGas));
-	console.log('input : ', input);
+
 	const tx = Transaction.fromTxData(
 		{
 			maxFeePerGas,
