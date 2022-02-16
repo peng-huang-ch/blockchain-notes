@@ -10,7 +10,7 @@ services:
     links:
       - netstats
     entrypoint: /root/start.sh
-    command: '--datadir=~/.ethereum/devchain --syncmode full --http --http.addr 0.0.0.0 --http.vhosts ,* --http.api personal,eth,net,web3,admin,miner --ws --ws.addr 0.0.0.0 --ws.api eth,debug,admin --networkid=666 --txlookuplimit 0 --gcmode archive --allow-insecure-unlock  --snapshot=false'
+    command: '--datadir=~/.ethereum/devchain --syncmode full --http --http.addr 0.0.0.0 --http.vhosts ,* --http.api personal,eth,net,web3,admin,miner --ws --ws.addr 0.0.0.0 --ws.api eth,debug,admin --networkid=666 --txlookuplimit 0 --gcmode archive --allow-insecure-unlock  --snapshot=false --rpc.allow-unprotected-txs'
             #  '--datadir /chain/data --syncmode full --http --http.addr 0.0.0.0 --http.vhosts ,* --http.api eth,debug,admin --ws --ws.addr 0.0.0.0 --ws.api eth,debug,admin --txlookuplimit 0 --gcmode archive
     volumes:
       - ./data/bootstrap:/root/.ethereum
