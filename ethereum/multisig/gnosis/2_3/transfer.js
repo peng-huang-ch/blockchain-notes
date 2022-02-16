@@ -1,6 +1,8 @@
 // https://github.com/gnosis/safe-react/blob/5020c0daa31ecc0f26520f206deda5393502ad30/src/logic/safe/store/actions/createTransaction.ts#L53
 const assert = require('assert');
 const Web3 = require('web3');
+const ethers = require('ethers');
+const InputDataDecoder = require('ethereum-input-data-decoder');
 const Web3Method = require('web3-core-method');
 const { FeeMarketEIP1559Transaction: Transaction } = require('@ethereumjs/tx');
 const { default: Common, Chain, Hardfork } = require('@ethereumjs/common');
@@ -10,10 +12,11 @@ const { toBN, toHex } = require('web3-utils');
 const { bufferToHex, toBuffer } = require('ethereumjs-util');
 const { stripHexPrefix } = require('ethjs-util');
 
-const { ZERO_ADDRESS, buildSignatureBytes, buildSafeTransaction, signTypedData, sendTx, safeApproveHash } = require('../gnosis');
+const { ZERO_ADDRESS, buildSignatureBytes, buildSafeTransaction, signTypedData, sendTx, safeApproveHash, keySignHash } = require('../gnosis');
+const { hexlify } = require('@ethersproject/bytes');
 
-// 2-2. eth transfer
-async function exec_eth_2_2({
+// eth transfer
+async function exec_eth({
 	web3,
 	chainId,
 	sender,
@@ -33,7 +36,7 @@ async function exec_eth_2_2({
 
 	const multisigContract = new Contract(safeSingletonABI, multiSigAddress);
 	multisigContract.setProvider(web3.currentProvider);
-	var multiSigContractNonce = await multisigContract.methods.nonce().call();
+	var multiSigContractNonce = 6 || await multisigContract.methods.nonce().call();
 
 	const safeTx = buildSafeTransaction({
 		to: receiptor,
@@ -49,12 +52,12 @@ async function exec_eth_2_2({
 			data: approverData
 		});
 	}
-
 	var approved = safeApproveHash(sender);
 	participants.push({
 		signer: sender,
 		data: approved.data,
 	})
+
 	var signatures = buildSignatureBytes(participants);
 
 	const params = [
@@ -72,6 +75,7 @@ async function exec_eth_2_2({
 
 	const safeSingletonContract = new Contract(safeSingletonABI);
 	var input = safeSingletonContract.methods.execTransaction(...params).encodeABI();
+
 
 	const common = new Common({ chain: Chain.Rinkeby, hardfork: Hardfork.London });
 	const nonce = await web3.eth.getTransactionCount(sender);
@@ -107,23 +111,21 @@ async function exec_eth_2_2({
 			data: input,
 			value: '0x00',
 			nonce: toHex(toBN(nonce)),
-			gasLimit: toHex(toBN(gasLimit)),
+			gasLimit: toHex(toBN('gasLimit')),
 		},
 		opts
 	);
+
 	const signedTx = tx.sign(toBuffer(privateKey));
 	const serialized = signedTx.serialize();
 	const txHash = signedTx.hash();
-	console.log('txid 		: ', toHex(txHash));
-	console.log('serialized : ', bufferToHex(serialized));
-	console.log('sender 	: ', sender);
-	return;
+
 	const hash = await sendTx(web3, bufferToHex(serialized));
 	console.log('hash', hash);
 }
 
-// 1-2. erc20 transfer
-async function exec_erc20_2_2({
+// erc20 transfer
+async function exec_erc20({
 	web3,
 	sender,
 	members,
@@ -216,7 +218,7 @@ async function exec_erc20_2_2({
 	const block = await web3.eth.getBlock('pending');
 	const baseFeePerGas = block['baseFeePerGas'];
 	const maxFeePerGas = toBN(baseFeePerGas).add(toBN(maxPriorityFeePerGas));
-
+	console.log('input : ', input);
 	const tx = Transaction.fromTxData(
 		{
 			maxFeePerGas,
@@ -244,17 +246,17 @@ async function exec_erc20_2_2({
 
 // init variables
 
-// exec_eth_2_2({
+// exec_eth({
 // 	web3,
 // 	chainId,
-// 	others,
+// 	members,
 // 	sender,
 // 	receiptor,
-// 	privateKey,
 // 	multiSigAddress,
 // }).catch(console.error);
+// return;
 
-exec_erc20_2_2({
+exec_erc20({
 	web3,
 	chainId,
 	members,

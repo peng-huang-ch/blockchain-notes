@@ -1,8 +1,11 @@
+const assert = require('assert');
 const { _TypedDataEncoder } = require("@ethersproject/hash");
-const { arrayify, splitSignature, hexZeroPad, joinSignature } = require("@ethersproject/bytes");
+const { hexlify, arrayify, splitSignature, hexZeroPad, joinSignature } = require("@ethersproject/bytes");
+const { hashMessage } = require("@ethersproject/hash");
 
 const EC = require('elliptic').ec;
 const { stripHexPrefix } = require("ethjs-util");
+const { u8aToHex } = require('@polkadot/util');
 const ec = new EC('secp256k1');
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -67,6 +70,12 @@ function buildSignatureBytes(signatures) {
 function keySignHash(privateKey, hash) {
 	const typedDataHash = arrayify(hash);
 	const keyPair = ec.keyFromPrivate(privateKey);
+	// var signature = keyPair.sign(typedDataHash);
+	// console.log('signature false : ', joinSignature(splitSignature({
+	// 	recoveryParam: signature.recoveryParam,
+	// 	r: hexZeroPad("0x" + signature.r.toString(16), 32),
+	// 	s: hexZeroPad("0x" + signature.s.toString(16), 32),
+	// })));
 	var signature = keyPair.sign(typedDataHash, { canonical: true });
 
 	return joinSignature(splitSignature({
