@@ -1,4 +1,3 @@
-require('dotenv').config();
 const { strict: assert } = require('assert');
 
 const {
@@ -7,13 +6,18 @@ const {
   assertIsBroadcastTxSuccess,
 } = require("@cosmjs/launchpad");
 
-const { createMultisigThresholdPubkey, encodeSecp256k1Pubkey, pubkeyToAddress, makeCosmoshubPath } = require('@cosmjs/amino');
+require('dotenv').config();
+const { createMultisigThresholdPubkey, encodeSecp256k1Pubkey, pubkeyToAddress, makeCosmoshubPath, encodeAminoPubkey } = require('@cosmjs/amino');
 const { SigningStargateClient, StargateClient, makeMultisignedTx } = require('@cosmjs/stargate');
 const { TxRaw } = require("cosmjs-types/cosmos/tx/v1beta1/tx");
-const mnemonic = process.env.MULTISIG_MNEMONIC;
+const { MsgDelegate, MsgUndelegate, MsgBeginRedelegate } = require("cosmjs-types/cosmos/staking/v1beta1/tx");
+const { MsgWithdrawDelegatorReward } = require("cosmjs-types/cosmos/distribution/v1beta1/tx");
+const { toHex } = require('@cosmjs/encoding');
 
+const mnemonic = process.env.STAKING_MNEMONIC;
 // https://github.com/cosmos/cosmjs/blob/c192fc9b95ef97e4afbf7f5b94f8e8194ae428a6/packages/stargate/src/multisignature.spec.ts#L175
 async function main() {
+  const validatorAddress = 'cosmosvaloper17qukqafj25wn8gdjwzlmlcm9xl00rxxe2lxujd';
   const threshold = 2;
   const prefix = 'cosmos';
   const rpcEndpoint = 'https://rpc.testnet.cosmos.network:443';
@@ -25,16 +29,53 @@ async function main() {
   // The composer does not need to be one of the signers.
   const accountOnChain = await client.getAccount(multisigAccountAddress);
   assert(accountOnChain, "Account does not exist on chain");
+  console.log('accountOnChain address       : ', accountOnChain.address)
+  console.log('accountOnChain pubkey        : ', accountOnChain.pubkey)
+  console.log('accountOnChain accountNumber : ', accountOnChain.accountNumber)
+  console.log('accountOnChain sequence      : ', accountOnChain.sequence)
+  console.log('decodePubkey(accountOnChain.pubkey) : ', accountOnChain.pubkey.value.pubkeys.map((key) => toHex(encodeAminoPubkey(key))))
 
-  const msgSend = {
-    fromAddress: multisigAccountAddress,
-    toAddress: "cosmos19rvl6ja9h0erq9dc2xxfdzypc739ej8k5esnhg",
-    amount: coins(1234, "uphoton"),
+  var amount = {
+    denom: "uphoton",
+    amount: "1234567",
   };
+
+  // const msg = {
+  //   typeUrl: "/cosmos.staking.v1beta1.MsgDelegate",
+  //   value: MsgDelegate.fromPartial({
+  //     delegatorAddress: multisigAccountAddress,
+  //     validatorAddress: validatorAddress,
+  //     amount: amount,
+  //   }),
+  // };
+
+  // const msg = {
+  //   typeUrl: "/cosmos.staking.v1beta1.MsgUndelegate",
+  //   value: MsgDelegate.fromPartial({
+  //     delegatorAddress: multisigAccountAddress,
+  //     validatorAddress: validatorAddress,
+  //     amount: amount,
+  //   }),
+  // };
+
+  // const msg = {
+  //   typeUrl: "/cosmos.staking.v1beta1.MsgBeginRedelegate",
+  //   value: MsgBeginRedelegate.fromPartial({
+  //     delegatorAddress: multisigAccountAddress,
+  //     validatorSrcAddress: validatorAddress,
+  //     validatorDstAddress: validatorAddress,
+  //     amount: amount,
+  //   }),
+  // };
+
   const msg = {
-    typeUrl: "/cosmos.bank.v1beta1.MsgSend",
-    value: msgSend,
+    typeUrl: "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward",
+    value: MsgWithdrawDelegatorReward.fromPartial({
+      validatorAddress: validatorAddress,
+      delegatorAddress: multisigAccountAddress,
+    }),
   };
+
   const gasLimit = 200000;
   const fee = {
     amount: coins(2000, "uphoton"),
@@ -47,7 +88,7 @@ async function main() {
     chainId: await client.getChainId(),
     msgs: [msg],
     fee: fee,
-    memo: "Happy new year",
+    memo: "Use your power wisely",
   };
 
   const [
@@ -91,7 +132,7 @@ async function main() {
     [pubkey0, pubkey1, pubkey2, pubkey3, pubkey4],
     threshold,
   );
-  assert.equal(multisigAccountAddress, pubkeyToAddress(multisigPubkey, prefix), 'should be equal');
+  assert.strictEqual(multisigAccountAddress, pubkeyToAddress(multisigPubkey, prefix), 'should be equal');
 
   const address0 = pubkeyToAddress(pubkey0, prefix);
   const address1 = pubkeyToAddress(pubkey1, prefix);
