@@ -60,7 +60,7 @@ async function main() {
     THRESHOLD,
     otherSignatories,
     TIME_POINT,
-    call.method.hash //
+    call_method_hash
   );
 
   const txHash = await tx.signAndSend(signer);

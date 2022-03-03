@@ -1,8 +1,8 @@
 const assert = require('assert');
 const BigNumber = require('bignumber.js');
 const cloverTypes = require('@clover-network/node-types');
-const { ApiPromise, WsProvider, Keyring } = require('@polkadot/api');
-const { u8aToHex, hexToU8a, formatBalance } = require('@polkadot/util');
+const { ApiPromise, WsProvider } = require('@polkadot/api');
+const { u8aToHex, formatBalance } = require('@polkadot/util');
 const { encodeMultiAddress, sortAddresses } = require('@polkadot/util-crypto');
 const { alice, aaron, phcc, provider } = require('../../../private');
 
