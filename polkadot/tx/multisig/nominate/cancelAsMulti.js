@@ -1,18 +1,13 @@
+const BigNumber = require('bignumber.js');
 const cloverTypes = require('@clover-network/node-types');
-const { ApiPromise, WsProvider, Keyring } = require('@polkadot/api');
-const { u8aToHex, hexToU8a, formatBalance } = require('@polkadot/util');
+const { ApiPromise, WsProvider } = require('@polkadot/api');
+const { formatBalance, u8aToHex, hexToU8a } = require('@polkadot/util');
 const { encodeMultiAddress, sortAddresses } = require('@polkadot/util-crypto');
-const BN = require('bn.js');
+const { alice, aaron, phcc, provider } = require('../../../private');
 
 async function main() {
-  const wsProvider = new WsProvider('wss://api.clover.finance');
+  const wsProvider = new WsProvider(provider);
   const api = await ApiPromise.create({ provider: wsProvider, types: cloverTypes });
-
-  const PHRASE = 'pledge suit pyramid apple satisfy same sponsor search involve hello crystal grief';
-
-  const AARON = 'traffic wine leader wheat mom device kiwi great horn room remind office';
-
-  const PHCC = 'fall fatal faculty talent bubble enhance burst frame circle school sheriff come';
 
   // 1. Define relevant constants
   formatBalance.setDefaults({
@@ -23,15 +18,10 @@ async function main() {
   // 2. Define relevant constants
   const ss58Format = 42;
   const THRESHOLD = 2;
-  const AMOUNT_TO_SEND = '100000';
-  const displayAmount = formatBalance(AMOUNT_TO_SEND);
+  const MAX_ADDITIONAL = new BigNumber(0.1).shiftedBy(18).toString();;
+  const displayAmount = formatBalance(MAX_ADDITIONAL);
 
   // 3. Initialize accounts
-  const keyring = new Keyring({ ss58Format, type: 'ecdsa' });
-  const alice = keyring.addFromUri(PHRASE + '//polkadot');
-  const aaron = keyring.addFromUri(AARON + '//polkadot');
-  const phcc = keyring.addFromUri(PHCC + '//polkadot');
-
   const signer = alice; // should be the approve transaction signer
   const dest = alice;
 
@@ -50,8 +40,12 @@ async function main() {
   );
   console.log('MULTISIG  : ', MULTISIG);
 
-  // 4. Send 1 WND to alice account
-  const call = api.tx.balances.transfer(dest.address, AMOUNT_TO_SEND);
+  // 4. Bond extra
+  const call = api.tx.staking.unbond(MAX_ADDITIONAL)
+  const call_method_hash = call.method.hash;
+  const call_method_hex = call.method.toHex();
+  console.log('call method hash : ', u8aToHex(call_method_hash));
+  console.log('call method hex  : ', call_method_hex);
 
   // 5. Retrieve and unwrap the timepoint
   const info = await api.query.multisig.multisigs(MULTISIG, call.method.hash);
@@ -66,7 +60,7 @@ async function main() {
     THRESHOLD,
     otherSignatories,
     TIME_POINT,
-    call.method.hash //
+    call_method_hash
   );
 
   const txHash = await tx.signAndSend(signer);

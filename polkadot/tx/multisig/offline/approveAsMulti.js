@@ -1,28 +1,15 @@
+const BigNumber = require('bignumber.js');
 const cloverTypes = require('@clover-network/node-types');
 const { ApiPromise, WsProvider, Keyring } = require('@polkadot/api');
 const { formatBalance, u8aToHex, hexToU8a } = require('@polkadot/util');
 const { sortAddresses, encodeMultiAddress } = require('@polkadot/util-crypto');
+const { alice, aaron, phcc, provider } = require('../../../private');
 
-const sleep = async (ns) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve();
-    }, ns);
-  });
-};
 
 async function main() {
   // await cryptoWaitReady();
-  const wsProvider = new WsProvider('wss://api.clover.finance');
+  const wsProvider = new WsProvider(provider);
   const api = await ApiPromise.create({ provider: wsProvider, types: cloverTypes });
-
-  await sleep(1000 * 1);
-
-  const PHRASE = 'pledge suit pyramid apple satisfy same sponsor search involve hello crystal grief';
-
-  const AARON = 'traffic wine leader wheat mom device kiwi great horn room remind office';
-
-  const PHCC = 'fall fatal faculty talent bubble enhance burst frame circle school sheriff come';
 
   // 1. Define relevant constants
   formatBalance.setDefaults({
@@ -34,18 +21,14 @@ async function main() {
   const SS58PREFIX = 42;
   const THRESHOLD = 2;
   const MAX_WEIGHT = 640000000;
-  const AMOUNT_TO_SEND = '100000';
+  const period = 10;
+  const AMOUNT_TO_SEND = new BigNumber(0.1).shiftedBy(18).toString();;
 
   const displayAmount = formatBalance(AMOUNT_TO_SEND, { forceUnit: 'clv', withSi: true });
   const depositBase = api.consts.multisig.depositBase;
   const depositFactor = api.consts.multisig.depositFactor;
 
   // 3. Initialize accounts
-  const keyring = new Keyring({ ss58Format: 42, type: 'ecdsa' });
-  const alice = keyring.addFromUri(PHRASE + '//polkadot');
-  const aaron = keyring.addFromUri(AARON + '//polkadot');
-  const phcc = keyring.addFromUri(PHCC + '//polkadot');
-
   const dest = alice;
   const signer = alice;
 
@@ -54,14 +37,14 @@ async function main() {
     aaron.address, // addresses[1]
     phcc.address, // addresses[2]
   ];
-  console.log(addresses);
+
   const MULTISIG = encodeMultiAddress(addresses, THRESHOLD, SS58PREFIX);
   const otherSignatories = sortAddresses(
     addresses.filter((who) => who !== signer.address),
     SS58PREFIX
   );
   console.log('MULTISIG     : ', MULTISIG);
-  console.log('dest.address : ', dest.address);
+  console.log('dest address : ', dest.address);
   console.log('quantity     : ', AMOUNT_TO_SEND);
 
   const { data } = await api.query.system.account(signer.address);
@@ -72,10 +55,13 @@ async function main() {
 
   // 4. API calls - info is necessary for the timepoint
   const call = api.tx.balances.transfer(dest.address, AMOUNT_TO_SEND);
-  const call_method_hash = call.method.hash;
-  const call_method_hex = call.method.toHex();
+  var call_method_hash = call.method.hash;
+  var call_method_hex = call.method.toHex();
   console.log('call method hash : ', u8aToHex(call_method_hash));
   console.log('call method hex  : ', call_method_hex);
+
+  var call_method_hash = '0x2016882e7f24c927ee46731119eb0d0fbf75d995ae454feacb0728ff201f571d';
+  var call_method_hex = '0x070000f94926205a255a902430e9310edae0455ed368437210c8a481bd93a43fca46121300008a5d78456301'
 
   // 5. Set the timepoint
   // If this IS the first approval, then this must be None (null)
@@ -89,8 +75,6 @@ async function main() {
   }
 
   const TIME_POINT = null;
-
-  console.log('approve as multi', THRESHOLD, otherSignatories, MAX_WEIGHT);
   // 6. approveAsMulti
   const tx = api.tx.multisig.approveAsMulti(
     THRESHOLD,
@@ -101,21 +85,14 @@ async function main() {
   );
 
   const { nonce } = await api.query.system.account(signer.address);
+  const currentBlock = await api.rpc.chain.getBlock();
+  const currentHeight = currentBlock.block.header.number;
+  const blockHash = currentBlock.block.header.hash.toHex();
 
-  const signedBlock = await api.rpc.chain.getBlock();
+  const era = api.createType('ExtrinsicEra', { current: currentHeight, period });
+  const options = { blockHash, era, nonce };
 
-  const options = {
-    blockHash: signedBlock.block.header.hash,
-    era: api.createType('ExtrinsicEra', {
-      current: signedBlock.block.header.number,
-      period: 10,
-    }),
-    nonce,
-  };
-
-  console.log('nonce', nonce.toNumber());
-
-  // // create the payload
+  //7. create the payload
   const payload = api.createType('SignerPayload', {
     method: tx.method,
     nonce: nonce.toNumber(),
@@ -127,34 +104,30 @@ async function main() {
     ...options,
   });
 
-  console.log('sender : ', signer.address);
+
   const placeholder = '0x020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001';
   tx.addSignature(signer.address, placeholder, payload.toPayload());
 
-  // const { signature } = api.createType('ExtrinsicPayload', payload.toPayload(), { version: api.extrinsicVersion }).sign(signer);
-  // tx.addSignature(signer.address, signature, payload.toPayload());
-
   const serialized = tx.toHex();
-  console.log('serialized', serialized);
-
   const signatureHash = payload.toRaw().data;
-  console.log('signatureHash  : ', signatureHash);
-
   const signature = u8aToHex(signer.sign(hexToU8a(signatureHash), { withType: true }));
-  console.log('signature      : ', signature);
+
+  console.log('sender           : ', signer.address);
+  console.log('nonce            : ', nonce.toNumber());
+  console.log('signatureHash    : ', signatureHash);
+  console.log('serialized       : ', serialized);
+  console.log('signature        : ', signature);
 
   const hex = serialized.replace(placeholder.slice(2), signature.slice(2));
   const extrinsic = api.createType('Extrinsic', hex);
   const extrinsicHex = extrinsic.toHex();
 
-  console.log('extrinsicHex', extrinsicHex);
-
-  return;
+  console.log('extrinsicHex     : ', extrinsicHex);
+  // return;
   const txHash = await api.rpc.author.submitExtrinsic(extrinsicHex);
-  console.log(`txHash :  ${txHash}`);
-
-  console.log(`depositBase   : ${depositBase}`);
-  console.log(`depositFactor : ${depositFactor}`);
+  console.log(`txHash           :  ${txHash}`);
+  console.log(`depositBase      : ${depositBase}`);
+  console.log(`depositFactor    : ${depositFactor}`);
   console.log(`Signer address   : ${signer.address}`);
   console.log(`Sending ${displayAmount} from ${dest.address} to ${MULTISIG}`);
   console.log(`Required values  : approveAsMulti(THRESHOLD, otherSignatories, TIME_POINT, call.method.hash, MAX_WEIGHT)`);
