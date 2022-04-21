@@ -2,7 +2,23 @@ require('dotenv').config();
 const crypto = require('crypto');
 const { eddsa: EdDSA } = require('elliptic');
 const { addHexPrefix, toBuffer } = require('ethereumjs-util');
+const ed = require('@noble/ed25519');
 const ec = new EdDSA('ed25519');
+
+async function edVerify() {
+	// keys, messages & other inputs can be Uint8Arrays or hex strings
+	// Uint8Array.from([0xde, 0xad, 0xbe, 0xef]) === 'deadbeef'
+	// const privateKey = ed.utils.randomPrivateKey();
+	// const message = Uint8Array.from([0xab, 0xbc, 0xcd, 0xde]);
+	// const publicKey = await ed.getPublicKey(privateKey);
+	// const signaturse = await ed.sign(message, privateKey);
+	var message = '68656c6c6f20776f726c64';
+	var signature = 'eb2f1f23b70163f24d09a94c432133443e4e87eb0a3fc3999375258545e00892c384cc38d57d16ebc698474b413b5f10db7e7b17320de11972679f6f66ab6508';
+	var publicKey = '7b53f5074cd12e1d39f7a2c93e05cacd2132058e4dc595d88ebb7e545b12ced5';
+	const isValid = await ed.verify(signature, message, publicKey);
+	console.log('Match:', isValid);
+
+};
 
 function generate() {
 	const { publicKey, privateKey } = crypto.generateKeyPairSync('ed25519');
@@ -44,3 +60,4 @@ function verify() {
 
 generate();
 verify();
+edVerify();
