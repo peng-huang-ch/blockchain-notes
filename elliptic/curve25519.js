@@ -7,9 +7,9 @@ var secret = process.env.CURVE_25519_SECRET;
 
 var priKey = ec.keyFromPrivate(hexToU8a(secret));
 var pubKey = priKey.getPublic('hex');
-console.log('pubKey: ', pubKey);
-return;
-var key = ec.keyFromSecret(hexToU8a(secret)); // hex string, array or Buffer
+
+// hex string, array or Buffer
+var key = ec.keyFromSecret(hexToU8a(secret));
 // Sign the message's hash (input must be an array, or a hex-string)
 
 var message = '0x43753242f0fb12a614a9bc34b2112b399749bef5c53a3b34ebb598004d8e2436';

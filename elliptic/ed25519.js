@@ -1,22 +1,46 @@
 require('dotenv').config();
+const crypto = require('crypto');
 const { eddsa: EdDSA } = require('elliptic');
+const { addHexPrefix, toBuffer } = require('ethereumjs-util');
 const ec = new EdDSA('ed25519');
 
-var secret = process.env.ED25519_SECRET;
+function generate() {
+	const { publicKey, privateKey } = crypto.generateKeyPairSync('ed25519');
+	const message = 'Hello world!';
 
-// Import public key
-var msgHash = '68656c6c6f20776f726c64';
-var pub = '08c9b5046e20d065825b0f284b659e7ea611cee97986bc740fbea0cf905316e3';
-var key = ec.keyFromSecret(pub, 'hex');
+	const signature = crypto.sign(null, Buffer.from(message), privateKey);
+	const verified = crypto.verify(null, Buffer.from(message), publicKey, signature)
 
-// Verify signature
-var signature = '4426f382b26a81fe43ebc1ab843e0d98d734e77f8342944876b2e701a80ef891671a3b1fec4fa1090b904a29299f2a2f8dc0e2d5af3ee9ae448908820af25105';
-console.log(key.verify(msgHash, signature));
+	console.log('signature 	: ');
+	console.log('privateKey : ', privateKey.export({ format: 'der', type: 'pkcs8' }).toString('hex'))
+	console.log('isMatch    : ', verified);
+	console.log('generated complete. \n');
+}
 
-var buf = Buffer.from(secret, 'hex');
-var key = ec.keyFromSecret(buf);
-var pub = key.getPublic('hex');
-console.log('pub key : ', pub);
+function verify() {
+	var secret = process.env.ED25519_SECRET;
+	var secret = toBuffer(addHexPrefix(secret));
 
-const sig = key.sign(Buffer.from(msgHash, 'hex'));
-console.log('sigHex', sig.toHex().toLowerCase());
+	// Import public key
+	var message = '68656c6c6f20776f726c64';
+	var message = toBuffer(addHexPrefix(message));
+	var signature = 'd457ebfb6ad19ffe14b658b76a5d9ed71ec03fc172e1c402403c4147579a9189135412d02e278494e5257286ceba6b3f82b3f8435117a65b37ba36c6c0eae60f';
+	var pub = 'db8a3fa848d200541efe3ac0168b4773ac8604629af64e35119c45b1d0216723';
+	var key = ec.keyFromPublic(pub, 'hex');
+
+	// Verify signature
+	var isMatch = key.verify(message, signature);
+	console.log('isMatch  : ', isMatch);
+
+	var key = ec.keyFromSecret(secret);
+	var pub = key.getPublic('hex');
+
+	console.log('pub key  : ', pub);
+	const sig = key.sign(message);
+	console.log('sigHex	  :', sig.toHex().toLowerCase());
+	console.log('verify complete. \n');
+}
+
+
+generate();
+verify();
