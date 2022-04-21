@@ -210,25 +210,40 @@ async function changeThreshold_2_2_to_2_1({
 	return;
 }
 
+const provider = 'https://rinkeby.infura.io/v3/de9290b603fc4609a6f0a65e23e8c7d3';
+const chainId = 4;
+const web3 = new Web3(provider);
+const multiSigAddress = '0xd7609c88EE60Ec0b2f72234380311dD5f34273FA';
+const sender = '0x0d5a689d6a973e945cbbfab37202a1788e5588e7';
+const privateKey = '';
 
-// 1_2 to 2_2
-changeThreshold_1_2_to_2_2({
-	web3,
-	sender,
-	privateKey,
-	multiSigAddress,
-	threshold: 2,
-}).catch(console.error);
-return;
+const approver = '0x2ab5d8164Cac7f006ED79817753Eb9C9CfeAa093';
+const approverKey = '';
 
-// 2_2 to 1_2
-changeThreshold_2_2_to_2_1({
-	chainId,
-	web3,
-	approver,
-	approverKey,
-	sender,
-	privateKey,
-	multiSigAddress,
-	threshold: 1,
-}).catch(console.error);
+async function main() {
+	switch (process.argv[2]) {
+		case '1_2_to_2_2':
+			await changeThreshold_1_2_to_2_2({
+				web3,
+				sender,
+				privateKey,
+				multiSigAddress,
+				threshold: 2,
+			});
+			break;
+		case '2_2_to_2_1':
+			changeThreshold_2_2_to_2_1({
+				chainId,
+				web3,
+				approver,
+				approverKey,
+				sender,
+				privateKey,
+				multiSigAddress,
+				threshold: 1,
+			}).catch(console.error);
+			break;
+	}
+}
+
+main().catch(console.error);
