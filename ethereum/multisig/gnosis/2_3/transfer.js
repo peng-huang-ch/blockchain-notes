@@ -7,11 +7,10 @@ const { default: Common, Chain, Hardfork } = require('@ethereumjs/common');
 const { getSafeSingletonDeployment, getProxyFactoryDeployment, getCompatibilityFallbackHandlerDeployment } = require('@gnosis.pm/safe-deployments');
 const Contract = require('web3-eth-contract');
 const { toBN, toHex } = require('web3-utils');
-const { bufferToHex, toBuffer } = require('ethereumjs-util');
+const { bufferToHex, toBuffer, addHexPrefix } = require('ethereumjs-util');
 const { stripHexPrefix } = require('ethjs-util');
 
 const { ZERO_ADDRESS, buildSignatureBytes, buildSafeTransaction, signTypedData, sendTx, safeApproveHash, keySignHash } = require('../gnosis');
-const { hexlify } = require('@ethersproject/bytes');
 
 // eth transfer
 async function exec_eth({
@@ -21,8 +20,9 @@ async function exec_eth({
 	members,
 	multiSigAddress,
 	receiptor,
+	quantity
 }) {
-	const amount = '10000000000000000';
+	const amount = quantity;
 
 	const others = members.filter(item => item.address !== sender);
 	const { privateKey } = members.find(item => item.address === sender);
@@ -34,7 +34,9 @@ async function exec_eth({
 
 	const multisigContract = new Contract(safeSingletonABI, multiSigAddress);
 	multisigContract.setProvider(web3.currentProvider);
-	var multiSigContractNonce = 6 || await multisigContract.methods.nonce().call();
+	var multiSigContractNonce = await multisigContract.methods.nonce().call('pending');
+
+	console.log('multiSigContractNonce : ', multiSigContractNonce);
 
 	const safeTx = buildSafeTransaction({
 		to: receiptor,
@@ -109,12 +111,12 @@ async function exec_eth({
 			data: input,
 			value: '0x00',
 			nonce: toHex(toBN(nonce)),
-			gasLimit: toHex(toBN('gasLimit')),
+			gasLimit: toHex(toBN(gasLimit)),
 		},
 		opts
 	);
 
-	const signedTx = tx.sign(toBuffer(privateKey));
+	const signedTx = tx.sign(toBuffer(addHexPrefix(privateKey)));
 	const serialized = signedTx.serialize();
 	const txHash = signedTx.hash();
 
@@ -125,16 +127,17 @@ async function exec_eth({
 // erc20 transfer
 async function exec_erc20({
 	web3,
+	chainId,
 	sender,
 	members,
 	multiSigAddress,
 	receiptor,
 	tokenAddress,
+	quantity,
 }) {
 	const others = members.filter(item => item.address !== sender);
 	const { privateKey } = members.find(item => item.address === sender);
 
-	const quantity = '10000000000000000';
 	const domain = { verifyingContract: multiSigAddress, chainId };
 
 	const raw = '0000000000000000000000000000000000000000000000000000000000000000';
@@ -230,7 +233,7 @@ async function exec_erc20({
 		},
 		opts
 	);
-	const signedTx = tx.sign(toBuffer(privateKey));
+	const signedTx = tx.sign(toBuffer(addHexPrefix(privateKey)));
 	const serialized = signedTx.serialize();
 	const txHash = signedTx.hash();
 
@@ -242,24 +245,58 @@ async function exec_erc20({
 	console.log('hash', hash);
 }
 
-// init variables
 
-// exec_eth({
-// 	web3,
-// 	chainId,
-// 	members,
-// 	sender,
-// 	receiptor,
-// 	multiSigAddress,
-// }).catch(console.error);
-// return;
+async function main() {
+	const provider = 'https://rinkeby.infura.io/v3/de9290b603fc4609a6f0a65e23e8c7d3';
+	const chainId = 4;
+	const web3 = new Web3(provider);
+	const sender = '0x0d5a689d6a973e945cbbfab37202a1788e5588e7';
+	const receiptor = '0x0d5a689d6a973e945cbbfab37202a1788e5588e7';
+	const tokenAddress = '0x01be23585060835e02b77ef475b0cc51aa1e0709';
+	const quantity = '10000000000000000';
+	const multiSigAddress = '0xd7609c88EE60Ec0b2f72234380311dD5f34273FA';
+	const threshold = 2;
+	const members = [
+		{
+			address: '0x0d5a689d6a973e945cbbfab37202a1788e5588e7',
+			privateKey: ''
+		},
+		{
+			address: '0xE6bac7d1B67690019Dc33fC29F9f156AEa6894B2',
+			privateKey: ''
 
-exec_erc20({
-	web3,
-	chainId,
-	members,
-	sender,
-	receiptor,
-	multiSigAddress,
-	tokenAddress,
-}).catch(console.error);
+		},
+		{
+			address: '0xFe7b59Eb9cFB13fb024efD08759Ce4f588CA7363',
+			privateKey: ''
+		}
+	];
+
+	switch (process.argv[2]) {
+		case 'exec_erc20':
+			await exec_erc20({
+				web3,
+				chainId,
+				members,
+				sender,
+				receiptor,
+				multiSigAddress,
+				tokenAddress,
+				quantity,
+			});
+		case 'exec_eth':
+			await exec_eth({
+				web3,
+				chainId,
+				members,
+				sender,
+				receiptor,
+				multiSigAddress,
+			});
+			break;
+	}
+}
+
+main().catch(console.error);
+
+// node transfer.js exec_erc20

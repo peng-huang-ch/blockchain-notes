@@ -187,22 +187,35 @@ async function exec_erc20_1_2({
 	console.log('hash', hash);
 }
 
+async function main() {
+	const provider = 'https://rinkeby.infura.io/v3/de9290b603fc4609a6f0a65e23e8c7d3';
+	const chainId = 4;
+	const web3 = new Web3(provider);
+	const sender = '0x0d5a689d6a973e945cbbfab37202a1788e5588e7';
+	const receiptor = '0x0d5a689d6a973e945cbbfab37202a1788e5588e7';
+	const tokenAddress = '0x01be23585060835e02b77ef475b0cc51aa1e0709';
+	const multiSigAddress = '0xd7609c88EE60Ec0b2f72234380311dD5f34273FA';
 
-// init variables
-
-exec_eth_1_2({
-	web3,
-	sender,
-	receiptor,
-	privateKey,
-	multiSigAddress,
-}).catch(console.error);
-
-exec_erc20_1_2({
-	web3,
-	sender,
-	receiptor,
-	privateKey,
-	multiSigAddress,
-	tokenAddress,
-}).catch(console.error);
+	switch (process.argv[2]) {
+		case 'eth_2_2':
+			await exec_eth_1_2({
+				web3,
+				sender,
+				receiptor,
+				privateKey,
+				multiSigAddress,
+			});
+			break;
+		case 'erc20_2_2':
+			await exec_erc20_1_2({
+				web3,
+				sender,
+				receiptor,
+				privateKey,
+				multiSigAddress,
+				tokenAddress,
+			});
+			break;
+	}
+}
+main().catch(console.error);

@@ -101,6 +101,12 @@ async function deploy({
 	console.log('hash', hash);
 }
 
+const provider = 'https://rinkeby.infura.io/v3/de9290b603fc4609a6f0a65e23e8c7d3';
+const web3 = new Web3(provider);
+const threshold = 2;
+const owners = ['0x370BA1dc25C07d0C77Ba9b83fcc75Fcc2a0aC243', '0x2ab5d8164Cac7f006ED79817753Eb9C9CfeAa093', '0x8b67944F06DA3f68e0C97ff54d3b27D960134C63'];
+const sender = '0x0d5a689d6a973e945cbbfab37202a1788e5588e7';
+const privateKey = '';
 
 deploy({
 	threshold,
