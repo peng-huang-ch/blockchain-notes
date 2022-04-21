@@ -1,18 +1,14 @@
+const assert = require('assert');
+const BigNumber = require('bignumber.js');
 const cloverTypes = require('@clover-network/node-types');
 const { ApiPromise, WsProvider, Keyring } = require('@polkadot/api');
 const { u8aToHex, hexToU8a, formatBalance } = require('@polkadot/util');
 const { encodeMultiAddress, sortAddresses } = require('@polkadot/util-crypto');
-const BN = require('bn.js');
+const { alice, aaron, phcc, provider } = require('../../../private');
 
 async function main() {
-  const wsProvider = new WsProvider('wss://api.clover.finance');
+  const wsProvider = new WsProvider(provider);
   const api = await ApiPromise.create({ provider: wsProvider, types: cloverTypes });
-
-  const PHRASE = 'pledge suit pyramid apple satisfy same sponsor search involve hello crystal grief';
-
-  const AARON = 'traffic wine leader wheat mom device kiwi great horn room remind office';
-
-  const PHCC = 'fall fatal faculty talent bubble enhance burst frame circle school sheriff come';
 
   // 1. Define relevant constants
   formatBalance.setDefaults({
@@ -24,23 +20,18 @@ async function main() {
   const ss58Format = 42;
   const THRESHOLD = 2;
   const MAX_WEIGHT = 640000000;
-  const AMOUNT_TO_SEND = new BN('1000');
+  const MAX_ADDITIONAL = new BigNumber(0.1).shiftedBy(18).toString();;
   const STORE_CALL = false;
-  const displayAmount = formatBalance(AMOUNT_TO_SEND);
+  const displayAmount = formatBalance(MAX_ADDITIONAL);
 
   // 3. Initialize accounts
-  const keyring = new Keyring({ ss58Format: ss58Format, type: 'sr25519' });
-  const alice = keyring.addFromUri(PHRASE + '//polkadot');
-  const aaron = keyring.addFromUri(AARON + '//polkadot');
-  const phcc = keyring.addFromUri(PHCC + '//polkadot');
-
   const dest = alice;
   const signer = aaron;
 
   const addresses = [
-    alice.address, // addresses[0]
-    aaron.address, // addresses[1]
-    phcc.address, // addresses[2]
+    alice.address, // alice
+    aaron.address, // aaron
+    phcc.address,
   ];
 
   const MULTISIG = encodeMultiAddress(addresses, THRESHOLD, ss58Format);
@@ -50,13 +41,10 @@ async function main() {
   );
   console.log('MULTISIG  : ', MULTISIG);
 
-  // 4. Send 1 WND to dest account
-  const call = api.tx.balances.transfer(dest.address, AMOUNT_TO_SEND);
-  // const call_method_hash = call.method.hash;
-  // const call_method_hex = call.method.toHex();
-  console.log('call method hex -: ', call.method.toHex());
-  const call_method_hash = hexToU8a('0x65222f6881191b6640f1e2609dc4c72b8a5cb9aded400f6e7f2b6b9c2997d97b');
-  const call_method_hex = '0x07000078fa2a61b6f9ee896d847d9363417fa984e40853dd72e05f7ea12fe9db4ead05a10f';
+  // 4. bond extra
+  const call = api.tx.staking.bondExtra(MAX_ADDITIONAL)
+  const call_method_hash = call.method.hash;
+  const call_method_hex = call.method.toHex();
 
   console.log('call method hash : ', u8aToHex(call_method_hash));
   console.log('call method hex  : ', call_method_hex);

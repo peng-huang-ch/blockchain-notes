@@ -1,43 +1,13 @@
 const cloverTypes = require('@clover-network/node-types');
 const { ApiPromise, WsProvider, Keyring } = require('@polkadot/api');
-const { u8aToHex, formatBalance } = require('@polkadot/util');
+const { formatBalance } = require('@polkadot/util');
 const { createKeyMulti, encodeAddress, sortAddresses, encodeMultiAddress } = require('@polkadot/util-crypto');
-
-const sleep = async (ns) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve();
-    }, ns);
-  });
-};
-
-function print(result, now) {
-  const { nonce, data: balance } = result;
-  console.log(`${now}: balance of ${balance.free} and a nonce of ${nonce}`);
-
-  formatBalance.setDefaults({ unit: 'CLV' });
-  console.log(formatBalance(balance.free, { withUnit: 'CLV', withSi: true }, 18));
-}
+const { alice, aaron, phcc, provider } = require('../../private');
 
 async function send() {
-  // await cryptoWaitReady();
-  const wsProvider = new WsProvider('wss://api.clover.finance');
-  //   const wsProvider = new WsProvider('wss://api-ivy-elastic.clover.finance');
 
+  const wsProvider = new WsProvider(provider);
   const api = await ApiPromise.create({ provider: wsProvider, types: cloverTypes });
-
-  const PHRASE = 'pledge suit pyramid apple satisfy same sponsor search involve hello crystal grief';
-
-  const AARON = 'miracle enforce rely repeat throw topic mystery stumble able bridge duty liar';
-  // const AARON = 'traffic wine leader wheat mom device kiwi great horn room remind office';
-
-  const PHCC = 'fall fatal faculty talent bubble enhance burst frame circle school sheriff come';
-
-  const PENG = 'push exhibit ozone spoil neglect supply palm leave master scorpion unveil rain';
-
-  const keyring = new Keyring({ ss58Format: 42, type: 'sr25519' });
-
-  const alice = keyring.addFromUri(PHRASE + '//polkadot');
 
   // 1. Use formatBalance to display amounts
   formatBalance.setDefaults({
@@ -87,28 +57,8 @@ async function auto() {
   const SS58PREFIX = 42;
   const AMOUNT_TO_SEND = 100;
 
-  // await cryptoWaitReady();
-  const wsProvider = new WsProvider('wss://api.clover.finance');
-
+  const wsProvider = new WsProvider(provider);
   const api = await ApiPromise.create({ provider: wsProvider, types: cloverTypes });
-
-  await sleep(1000 * 1);
-
-  const PHRASE = 'pledge suit pyramid apple satisfy same sponsor search involve hello crystal grief';
-
-  const AARON = 'traffic wine leader wheat mom device kiwi great horn room remind office';
-
-  const PHCC = 'fall fatal faculty talent bubble enhance burst frame circle school sheriff come';
-
-  //   const PENG = 'push exhibit ozone spoil neglect supply palm leave master scorpion unveil rain';
-
-  const keyring = new Keyring({ ss58Format: 42, type: 'sr25519' });
-
-  const alice = keyring.addFromUri(PHRASE + '//polkadot');
-
-  const aaron = keyring.addFromUri(AARON + '//polkadot');
-
-  const phcc = keyring.addFromUri(PHCC + '//polkadot');
 
   const addresses = [
     alice.address, // addresses[0]

@@ -11,7 +11,6 @@ const { bufferToHex, toBuffer, addHexPrefix } = require('ethereumjs-util');
 const { stripHexPrefix } = require('ethjs-util');
 
 const { ZERO_ADDRESS, buildSignatureBytes, buildSafeTransaction, signTypedData, sendTx, safeApproveHash, keySignHash } = require('../gnosis');
-const { hexlify } = require('@ethersproject/bytes');
 
 // eth transfer
 async function exec_eth({

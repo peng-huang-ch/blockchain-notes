@@ -2,27 +2,11 @@ const cloverTypes = require('@clover-network/node-types');
 const { ApiPromise, WsProvider, Keyring } = require('@polkadot/api');
 const { formatBalance, u8aToHex, hexToU8a } = require('@polkadot/util');
 const { sortAddresses, encodeMultiAddress } = require('@polkadot/util-crypto');
-
-const sleep = async (ns) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve();
-    }, ns);
-  });
-};
+const { alice, aaron, phcc, provider } = require('../../../private');
 
 async function main() {
-  // await cryptoWaitReady();
-  const wsProvider = new WsProvider('wss://api.clover.finance');
+  const wsProvider = new WsProvider(provider);
   const api = await ApiPromise.create({ provider: wsProvider, types: cloverTypes });
-
-  await sleep(1000 * 1);
-
-  const PHRASE = 'pledge suit pyramid apple satisfy same sponsor search involve hello crystal grief';
-
-  const AARON = 'traffic wine leader wheat mom device kiwi great horn room remind office';
-
-  const PHCC = 'fall fatal faculty talent bubble enhance burst frame circle school sheriff come';
 
   // 1. Define relevant constants
   formatBalance.setDefaults({
@@ -34,18 +18,13 @@ async function main() {
   const SS58PREFIX = 42;
   const THRESHOLD = 2;
   const MAX_WEIGHT = 640000000;
-  const AMOUNT_TO_SEND = '100000';
+  const AMOUNT_TO_SEND = new BigNumber(0.1).shiftedBy(18).toString();;
 
   const displayAmount = formatBalance(AMOUNT_TO_SEND, { forceUnit: 'clv', withSi: true });
   const depositBase = api.consts.multisig.depositBase;
   const depositFactor = api.consts.multisig.depositFactor;
 
   // 3. Initialize accounts
-  const keyring = new Keyring({ ss58Format: 42, type: 'ecdsa' });
-  const alice = keyring.addFromUri(PHRASE + '//polkadot');
-  const aaron = keyring.addFromUri(AARON + '//polkadot');
-  const phcc = keyring.addFromUri(PHCC + '//polkadot');
-
   const dest = alice;
   const signer = alice;
 
@@ -54,14 +33,15 @@ async function main() {
     aaron.address, // addresses[1]
     phcc.address, // addresses[2]
   ];
-  console.log(addresses);
+
   const MULTISIG = encodeMultiAddress(addresses, THRESHOLD, SS58PREFIX);
   const otherSignatories = sortAddresses(
     addresses.filter((who) => who !== signer.address),
     SS58PREFIX
   );
+
   console.log('MULTISIG     : ', MULTISIG);
-  console.log('dest.address : ', dest.address);
+  console.log('addresses    : ', addresses);
   console.log('quantity     : ', AMOUNT_TO_SEND);
 
   const { data } = await api.query.system.account(signer.address);
@@ -71,7 +51,15 @@ async function main() {
   console.log(frozen.toHuman());
 
   // 4. API calls - info is necessary for the timepoint
-  const call = api.tx.balances.transfer(dest.address, AMOUNT_TO_SEND);
+  const targets = [
+    "5FNQoCoibJMAyqC77og9tSbhGUtaVt51SD7GdCxmMeWxPBvX",
+    "5CqWfdrRGdZe6bwxZMiHfdcNAVePjkUJpSh2rpKgcNWciTFP"
+  ];
+  const transactions = [
+    api.tx.staking.bond(MULTISIG, AMOUNT_TO_SEND, 'Staked'), //
+    api.tx.staking.nominate(targets), //
+  ];
+  const call = api.tx.utility.batch(transactions);
   const call_method_hash = call.method.hash;
   const call_method_hex = call.method.toHex();
   console.log('call method hash : ', u8aToHex(call_method_hash));
@@ -79,7 +67,7 @@ async function main() {
 
   // 5. Set the timepoint
   // If this IS the first approval, then this must be None (null)
-  // const TIME_POINT = null;s
+  // const TIME_POINT = null;
   // If this is NOT the first approval, then it must be Some,
   // with the timepoint (block number and transaction index)
   // of the first approval transaction :
@@ -149,7 +137,7 @@ async function main() {
 
   console.log('extrinsicHex', extrinsicHex);
 
-  return;
+
   const txHash = await api.rpc.author.submitExtrinsic(extrinsicHex);
   console.log(`txHash :  ${txHash}`);
 

@@ -1,26 +1,13 @@
+const BigNumber = require('bignumber.js');
 const cloverTypes = require('@clover-network/node-types');
 const { ApiPromise, WsProvider, Keyring } = require('@polkadot/api');
 const { u8aToHex, hexToU8a, formatBalance } = require('@polkadot/util');
 const { encodeMultiAddress, sortAddresses } = require('@polkadot/util-crypto');
-const BN = require('bn.js');
-
-const sleep = async (ns) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve();
-    }, ns);
-  });
-};
+const { alice, aaron, phcc, provider } = require('../../../private');
 
 async function main() {
-  const wsProvider = new WsProvider('wss://api.clover.finance');
+  const wsProvider = new WsProvider(provider);
   const api = await ApiPromise.create({ provider: wsProvider, types: cloverTypes });
-
-  const PHRASE = 'pledge suit pyramid apple satisfy same sponsor search involve hello crystal grief';
-
-  const AARON = 'traffic wine leader wheat mom device kiwi great horn room remind office';
-
-  const PHCC = 'fall fatal faculty talent bubble enhance burst frame circle school sheriff come';
 
   // 1. Define relevant constants
   formatBalance.setDefaults({
@@ -31,15 +18,11 @@ async function main() {
   // 2. Define relevant constants
   const ss58Format = 42;
   const THRESHOLD = 2;
-  const AMOUNT_TO_SEND = '100000';
+  const AMOUNT_TO_SEND = new BigNumber(0.1).shiftedBy(18).toString();;
   const displayAmount = formatBalance(AMOUNT_TO_SEND);
 
   // 3. Initialize accounts
-  const keyring = new Keyring({ ss58Format: 42, type: 'ecdsa' });
-  const alice = keyring.addFromUri(PHRASE + '//polkadot');
-  const aaron = keyring.addFromUri(AARON + '//polkadot');
-  const phcc = keyring.addFromUri(PHCC + '//polkadot');
-
+  const dest = alice;
   const signer = alice; // should be the approve transaction signer
 
   console.log('Signer address : ', signer.address);
@@ -58,28 +41,33 @@ async function main() {
   console.log('MULTISIG  : ', MULTISIG);
 
   // 4. Send 1 WND to alice account
-  const call = api.tx.balances.transfer(alice.address, AMOUNT_TO_SEND);
-  console.log('call', call.method.hash.toHuman());
+  const call = api.tx.balances.transfer(dest.address, AMOUNT_TO_SEND);
+  var call_method_hash = call.method.hash;
+  var call_method_hex = call.method.toHex();
+  console.log('call method hash : ', u8aToHex(call_method_hash));
+  console.log('call method hash : ', call_method_hash.toHex());
+  console.log('call method hex  : ', call_method_hex);
+  var call_method_hash = "0x851f64282d0567109a3cd1271eda7b8d8de1ba3a8f8458e53a64d1a19b196b42";
+  var call_method_hex = "0x09011300008a5d78456301";
 
-  console.log('THRESHOLD', THRESHOLD);
-  console.log('otherSignatories', otherSignatories);
-
-  const call_method_hash = '0xbf13d36031407d5ede1415e0e93e16606fffa0f46b70481aded73627b93465c4';
-  console.log('');
   // 5. Retrieve and unwrap the timepoint
-  const info = await api.query.multisig.multisigs('5Gj9zP2Rr7ZTu9RWfSZ8W62tf1kcmsoLYSeX6BqDwUHQKw7j', call_method_hash);
+  const info = await api.query.multisig.multisigs(MULTISIG, call_method_hash);
   if (!info.isSome) {
     throw new Error('do not found the time point.');
   }
   const TIME_POINT = info.unwrap().when;
   console.log('TIME_POINT    : ', TIME_POINT.toString());
-
-  // 6. Cancel asMulti transaction
-  const tx = api.tx.multisig.cancelAsMulti(THRESHOLD, otherSignatories, TIME_POINT, call_method_hash);
-
-  const tx_hash = await tx.signAndSend(signer);
-  console.log('tx', tx_hash.toHuman());
   return;
+  // 6. Cancel asMulti transaction
+  const tx = api.tx.multisig.cancelAsMulti(
+    THRESHOLD,
+    otherSignatories,
+    TIME_POINT,
+    call_method_hash //
+  );
+
+  // const tx_hash = await tx.signAndSend(signer);
+  // console.log('tx', tx_hash.toHuman());
 
   const { nonce } = await api.query.system.account(signer.address);
   // // create the payload
@@ -88,7 +76,7 @@ async function main() {
     blockHash: signedBlock.block.header.hash,
     era: api.createType('ExtrinsicEra', {
       current: signedBlock.block.header.number,
-      period: 50,
+      period: 60,
     }),
     nonce,
   };
@@ -103,27 +91,25 @@ async function main() {
     ...options,
   });
 
-  const placeholder = '0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001';
+  const placeholder = '0x020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001';
   tx.addSignature(signer.address, placeholder, payload.toPayload());
 
-  // const { signature } = api.createType('ExtrinsicPayload', payload.toPayload(), { version: api.extrinsicVersion }).sign(signer);
-  // tx.addSignature(signer.address, signature, payload.toPayload());
-
   const serialized = tx.toHex();
-  console.log('serialized', serialized);
-
   const signatureHash = payload.toRaw().data;
-  console.log('signatureHash  : ', signatureHash);
-
   const signature = u8aToHex(signer.sign(hexToU8a(signatureHash), { withType: true }));
-  console.log('signature      : ', signature);
+
+  console.log('sender           : ', signer.address);
+  console.log('nonce            : ', nonce.toNumber());
+  console.log('signatureHash    : ', signatureHash);
+  console.log('serialized       : ', serialized);
+  console.log('signature        : ', signature);
 
   const hex = serialized.replace(placeholder.slice(2), signature.slice(2));
   const extrinsic = api.createType('Extrinsic', hex);
   const extrinsicHex = extrinsic.toHex();
 
-  console.log('extrinsicHex', extrinsicHex);
-  // return;
+  console.log('extrinsicHex     : ', extrinsicHex);
+
   const txHash = await api.rpc.author.submitExtrinsic(extrinsicHex);
   console.log(`txHash :  ${txHash}`);
 
