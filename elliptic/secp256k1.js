@@ -36,7 +36,7 @@ display(signature);
 
 var expected = ecc.sign(Buffer.from(msg, 'hex'), privKey);
 console.log('ecc : ', u8aToHex(expected));
-return;
+
 var canonicalSignature = canonical(signature);
 console.log('---------------');
 console.log('-- canonical --');
