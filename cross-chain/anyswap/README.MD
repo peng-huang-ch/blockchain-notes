@@ -8,7 +8,7 @@
 ## Bridge
 
 - [Bridge v2](https://bridgeapi.anyswap.exchange/v2/serverInfo/chainid)
-- [How-to-integrate-AnySwap-Router](https://github.com/anyswap/CrossChain-Router/wiki/How-to-integrate-AnySwap-Router)
+- [Bridge api for frontend](https://github.com/anyswap/CrossChain-Bridge/wiki/Bridge-api-for-frontend)
 
 ## MultiChain Bridge for Projects + Listing from
 
