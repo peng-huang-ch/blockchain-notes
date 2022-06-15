@@ -14,7 +14,6 @@ async function approve() {
 	console.log('wallet : ', address);
 
 	var url = 'https://bsc-dataseed2.binance.org/';
-	// var url = 'https://rinkeby.infura.io/v3/de9290b603fc4609a6f0a65e23e8c7d3';
 
 	var router = '0xd1c5966f9f5ee6881ff6b261bbeda45972b1b5f3';
 	var token = '0xEDF0c420bc3b92B961C6eC411cc810CA81F5F21a';
