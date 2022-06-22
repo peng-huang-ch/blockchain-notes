@@ -37,7 +37,6 @@ async function exec_eth({
 	var multiSigContractNonce = await multisigContract.methods.nonce().call('pending');
 
 	console.log('multiSigContractNonce : ', multiSigContractNonce);
-
 	const safeTx = buildSafeTransaction({
 		to: receiptor,
 		value: amount,
@@ -74,8 +73,8 @@ async function exec_eth({
 	];
 
 	const safeSingletonContract = new Contract(safeSingletonABI);
-	var input = safeSingletonContract.methods.execTransaction(...params).encodeABI();
 
+	var input = safeSingletonContract.methods.execTransaction(...params).encodeABI();
 
 	const common = new Common({ chain: Chain.Rinkeby, hardfork: Hardfork.London });
 	const nonce = await web3.eth.getTransactionCount(sender);
@@ -292,6 +291,7 @@ async function main() {
 				sender,
 				receiptor,
 				multiSigAddress,
+				quantity,
 			});
 			break;
 	}
