@@ -11,6 +11,7 @@ const { bufferToHex, toBuffer } = require('ethereumjs-util');
 const { stripHexPrefix } = require('ethjs-util');
 
 const { ZERO_ADDRESS, buildSignatureBytes, buildSafeTransaction, signTypedData, sendTx, safeApproveHash } = require('../gnosis');
+const { ethers } = require('ethers');
 
 // 2-2. eth transfer
 async function exec_eth_2_2({
@@ -21,8 +22,7 @@ async function exec_eth_2_2({
 	multiSigAddress,
 	receiptor,
 }) {
-	const amount = '10000000000000000';
-
+	const amount = ethers.utils.parseEther('0.01');
 	const others = members.filter(item => item.address !== sender);
 	const { privateKey } = members.find(item => item.address === sender);
 
@@ -34,6 +34,7 @@ async function exec_eth_2_2({
 	const multisigContract = new Contract(safeSingletonABI, multiSigAddress);
 	multisigContract.setProvider(web3.currentProvider);
 	var multiSigContractNonce = await multisigContract.methods.nonce().call();
+	console.log('multiSigContractNonce', multiSigContractNonce);
 
 	const safeTx = buildSafeTransaction({
 		to: receiptor,
@@ -50,12 +51,15 @@ async function exec_eth_2_2({
 		});
 	}
 
+
 	var approved = safeApproveHash(sender);
 	participants.push({
 		signer: sender,
 		data: approved.data,
 	})
 	var signatures = buildSignatureBytes(participants);
+	console.log('signatures : ', signatures);
+	console.log('receiptor : ', receiptor)
 
 	const params = [
 		receiptor,
@@ -117,13 +121,14 @@ async function exec_eth_2_2({
 	console.log('txid 		: ', toHex(txHash));
 	console.log('serialized : ', bufferToHex(serialized));
 	console.log('sender 	: ', sender);
-	return;
+	// return;
 	const hash = await sendTx(web3, bufferToHex(serialized));
 	console.log('hash', hash);
 }
 
 // 1-2. erc20 transfer
 async function exec_erc20_2_2({
+	chainId,
 	web3,
 	sender,
 	members,
@@ -243,25 +248,20 @@ async function exec_erc20_2_2({
 }
 
 async function main() {
-	const provider = 'https://rinkeby.infura.io/v3/de9290b603fc4609a6f0a65e23e8c7d3';
+	const provider = '';
 	const chainId = 4;
 	const web3 = new Web3(provider);
-	const sender = '0x0d5a689d6a973e945cbbfab37202a1788e5588e7';
-	const receiptor = '0x0d5a689d6a973e945cbbfab37202a1788e5588e7';
-	const tokenAddress = '0x01be23585060835e02b77ef475b0cc51aa1e0709';
-	const multiSigAddress = '0xd7609c88EE60Ec0b2f72234380311dD5f34273FA';
+	const sender = '';
+	const receiptor = '';
+	const tokenAddress = '';
+	const multiSigAddress = '';
 	const members = [
 		{
-			address: '0x0d5a689d6a973e945cbbfab37202a1788e5588e7',
+			address: '',
 			privateKey: ''
 		},
 		{
-			address: '0xE6bac7d1B67690019Dc33fC29F9f156AEa6894B2',
-			privateKey: ''
-
-		},
-		{
-			address: '0xFe7b59Eb9cFB13fb024efD08759Ce4f588CA7363',
+			address: '',
 			privateKey: ''
 		}
 	];
@@ -271,10 +271,9 @@ async function main() {
 			await exec_eth_2_2({
 				web3,
 				chainId,
-				others,
+				members,
 				sender,
 				receiptor,
-				privateKey,
 				multiSigAddress,
 			});
 			break;
@@ -292,6 +291,3 @@ async function main() {
 	}
 }
 main().catch(console.error);
-
-
-
