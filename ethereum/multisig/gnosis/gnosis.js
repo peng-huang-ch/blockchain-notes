@@ -70,6 +70,7 @@ function buildSignatureBytes(signatures) {
 function keySignHash(privateKey, hash) {
 	const typedDataHash = arrayify(hash);
 	const keyPair = ec.keyFromPrivate(privateKey);
+	console.log('getPublic', keyPair.getPublic(true, 'hex'));
 	// var signature = keyPair.sign(typedDataHash);
 	// console.log('signature false : ', joinSignature(splitSignature({
 	// 	recoveryParam: signature.recoveryParam,
@@ -77,7 +78,11 @@ function keySignHash(privateKey, hash) {
 	// 	s: hexZeroPad("0x" + signature.s.toString(16), 32),
 	// })));
 	var signature = keyPair.sign(typedDataHash, { canonical: true });
-
+	console.log('xxxx ', joinSignature(splitSignature({
+		recoveryParam: signature.recoveryParam,
+		r: hexZeroPad("0x" + signature.r.toString(16), 32),
+		s: hexZeroPad("0x" + signature.s.toString(16), 32),
+	})))
 	return joinSignature(splitSignature({
 		recoveryParam: signature.recoveryParam,
 		r: hexZeroPad("0x" + signature.r.toString(16), 32),
@@ -90,6 +95,7 @@ async function signTypedData(privateKey, domain, safeTx, provider) {
 		return provider?.resolveName(name);
 	});
 	const safeHash = calculateSafeTransactionHash(populated.domain.chainId, populated.domain.verifyingContract, populated.value);
+	console.log('safeHash : ', safeHash);
 	const typedDataHash = arrayify(safeHash);
 	return keySignHash(privateKey, typedDataHash);
 }
