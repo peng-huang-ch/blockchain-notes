@@ -25,10 +25,6 @@ async function exec_eth({
 	quantity
 }) {
 	const amount = quantity;
-
-	const others = members;
-	// const { privateKey } = members.find(item => item.address === sender);
-
 	const chain = Chain.Rinkeby;
 	const safeSingleton = getSafeSingletonDeployment({ chain });
 	const safeSingletonABI = safeSingleton.abi;
@@ -44,7 +40,7 @@ async function exec_eth({
 	});
 	const domain = { verifyingContract: multiSigAddress, chainId };
 
-	for (const item of others) {
+	for (const item of members) {
 		var approverData = await signTypedData(item.privateKey, domain, safeTx);
 		participants.push({
 			signer: item.address,
