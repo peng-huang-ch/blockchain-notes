@@ -114,13 +114,14 @@ async function main() {
 	const senderPrivetKey = ''
 
 	const receiptor = '0x0495EE61A6c19494Aa18326d08A961c446423cA2';
+	// const tokenAddress = '0x01be23585060835e02b77ef475b0cc51aa1e0709';
 	const tokenAddress = '0x01be23585060835e02b77ef475b0cc51aa1e0709';
 	const multiSigAddress = '0xDbC2AEEa2EEa239Dce1d0762490FE8718396F8dD';
 	const members = [
-		{
-			address: '0x0495EE61A6c19494Aa18326d08A961c446423cA2',
-			privateKey: ''
-		},
+		// {
+		// 	address: '0x0495EE61A6c19494Aa18326d08A961c446423cA2',
+		// 	privateKey: ''
+		// },
 		{
 			address: '0xD383ACF980b70855AB0C2c4AF0Adaa520E39Bcb3',
 			privateKey: ''

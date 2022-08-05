@@ -1,30 +1,30 @@
 // https://github.com/gnosis/safe-react/blob/5020c0daa31ecc0f26520f206deda5393502ad30/src/logic/safe/store/actions/createTransaction.ts#L53
-const assert = require('assert');
 const Web3 = require('web3');
+const { ethers } = require('ethers');
 const Web3Method = require('web3-core-method');
 const { FeeMarketEIP1559Transaction: Transaction } = require('@ethereumjs/tx');
 const { default: Common, Chain, Hardfork } = require('@ethereumjs/common');
-const { getSafeSingletonDeployment, getProxyFactoryDeployment, getCompatibilityFallbackHandlerDeployment } = require('@gnosis.pm/safe-deployments');
+const { getSafeSingletonDeployment } = require('@gnosis.pm/safe-deployments');
 const Contract = require('web3-eth-contract');
 const { toBN, toHex } = require('web3-utils');
-const { bufferToHex, toBuffer } = require('ethereumjs-util');
+const { addHexPrefix, bufferToHex, toBuffer } = require('ethereumjs-util');
 const { stripHexPrefix } = require('ethjs-util');
 
-const { ZERO_ADDRESS, buildSignatureBytes, buildSafeTransaction, signTypedData, sendTx, safeApproveHash } = require('../gnosis');
-const { ethers } = require('ethers');
+const { buildSignatureBytes, buildSafeTransaction, signTypedData, sendTx, safeApproveHash } = require('../gnosis');
+
 
 // 2-2. eth transfer
 async function exec_eth_2_2({
 	web3,
 	chainId,
 	sender,
+	senderPrivetKey,
 	members,
 	multiSigAddress,
 	receiptor,
 }) {
 	const amount = ethers.utils.parseEther('0.01');
 	const others = members.filter(item => item.address !== sender);
-	const { privateKey } = members.find(item => item.address === sender);
 
 	const chain = Chain.Rinkeby;
 	const safeSingleton = getSafeSingletonDeployment({ chain });
@@ -62,15 +62,15 @@ async function exec_eth_2_2({
 	console.log('receiptor : ', receiptor)
 
 	const params = [
-		receiptor,
-		amount,
-		'0x',
-		0, // operation
-		0, // safeTxGas
-		0, // dataGas
-		0, // gasPrice
-		ZERO_ADDRESS, // gasToken
-		ZERO_ADDRESS, // refundReceiver
+		safeTx.to,
+		safeTx.value, // value
+		safeTx.data,
+		safeTx.operation, // operation
+		safeTx.safeTxGas, // safeTxGas
+		safeTx.baseGas, // dataGas
+		safeTx.gasPrice, // gasPrice
+		safeTx.gasToken, // gasToken
+		safeTx.refundReceiver, // refundReceiver
 		signatures,
 	];
 
@@ -115,7 +115,7 @@ async function exec_eth_2_2({
 		},
 		opts
 	);
-	const signedTx = tx.sign(toBuffer(privateKey));
+	const signedTx = tx.sign(toBuffer(addHexPrefix(senderPrivetKey)));
 	const serialized = signedTx.serialize();
 	const txHash = signedTx.hash();
 	console.log('txid 		: ', toHex(txHash));
@@ -131,14 +131,12 @@ async function exec_erc20_2_2({
 	chainId,
 	web3,
 	sender,
+	senderPrivetKey,
 	members,
 	multiSigAddress,
 	receiptor,
 	tokenAddress,
 }) {
-	const others = members.filter(item => item.address !== sender);
-	const { privateKey } = members.find(item => item.address === sender);
-
 	const quantity = '10000000000000000';
 	const domain = { verifyingContract: multiSigAddress, chainId };
 
@@ -167,7 +165,7 @@ async function exec_erc20_2_2({
 		nonce: multiSigContractNonce,
 	});
 
-	for (const item of others) {
+	for (const item of members) {
 		var approverData = await signTypedData(item.privateKey, domain, safeTx);
 		participants.push({
 			signer: item.address,
@@ -182,15 +180,15 @@ async function exec_erc20_2_2({
 	var signatures = buildSignatureBytes(participants);
 
 	const params = [
-		tokenAddress,
-		0, // value
-		data,
-		0, // operation
-		0, // safeTxGas
-		0, // dataGas
-		0, // gasPrice
-		ZERO_ADDRESS, // gasToken
-		ZERO_ADDRESS, // refundReceiver
+		safeTx.to,
+		safeTx.value, // value
+		safeTx.data,
+		safeTx.operation, // operation
+		safeTx.safeTxGas, // safeTxGas
+		safeTx.baseGas, // dataGas
+		safeTx.gasPrice, // gasPrice
+		safeTx.gasToken, // gasToken
+		safeTx.refundReceiver, // refundReceiver
 		signatures,
 	];
 
@@ -235,7 +233,7 @@ async function exec_erc20_2_2({
 		},
 		opts
 	);
-	const signedTx = tx.sign(toBuffer(privateKey));
+	const signedTx = tx.sign(toBuffer(addHexPrefix(senderPrivetKey)));
 	const serialized = signedTx.serialize();
 	const txHash = signedTx.hash();
 
@@ -248,21 +246,26 @@ async function exec_erc20_2_2({
 }
 
 async function main() {
-	const provider = '';
+	const provider = 'https://rinkeby.infura.io/v3/de9290b603fc4609a6f0a65e23e8c7d3';
 	const chainId = 4;
 	const web3 = new Web3(provider);
-	const sender = '';
-	const receiptor = '';
-	const tokenAddress = '';
-	const multiSigAddress = '';
+
+	const sender = '0xD383ACF980b70855AB0C2c4AF0Adaa520E39Bcb3';
+	const senderPrivetKey = ''
+
+	const receiptor = '0x0495EE61A6c19494Aa18326d08A961c446423cA2';
+	// const tokenAddress = '0x01be23585060835e02b77ef475b0cc51aa1e0709';
+	const tokenAddress = '0x01be23585060835e02b77ef475b0cc51aa1e0709';
+	const multiSigAddress = '0xDbC2AEEa2EEa239Dce1d0762490FE8718396F8dD';
 	const members = [
+		// {
+		// 	address: '0x0495EE61A6c19494Aa18326d08A961c446423cA2',
+		// 	privateKey: ''
+		// },
 		{
-			address: '',
+			address: '0xD383ACF980b70855AB0C2c4AF0Adaa520E39Bcb3',
 			privateKey: ''
-		},
-		{
-			address: '',
-			privateKey: ''
+
 		}
 	];
 
@@ -283,6 +286,7 @@ async function main() {
 				chainId,
 				members,
 				sender,
+				senderPrivetKey,
 				receiptor,
 				multiSigAddress,
 				tokenAddress,

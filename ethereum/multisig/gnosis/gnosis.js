@@ -1,11 +1,9 @@
 const assert = require('assert');
 const { _TypedDataEncoder } = require("@ethersproject/hash");
 const { hexlify, arrayify, splitSignature, hexZeroPad, joinSignature } = require("@ethersproject/bytes");
-const { hashMessage } = require("@ethersproject/hash");
-
+const { utils } = require('ethers')
 const EC = require('elliptic').ec;
 const { stripHexPrefix } = require("ethjs-util");
-const { u8aToHex } = require('@polkadot/util');
 const ec = new EC('secp256k1');
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -70,19 +68,7 @@ function buildSignatureBytes(signatures) {
 function keySignHash(privateKey, hash) {
 	const typedDataHash = arrayify(hash);
 	const keyPair = ec.keyFromPrivate(privateKey);
-	console.log('getPublic', keyPair.getPublic(true, 'hex'));
-	// var signature = keyPair.sign(typedDataHash);
-	// console.log('signature false : ', joinSignature(splitSignature({
-	// 	recoveryParam: signature.recoveryParam,
-	// 	r: hexZeroPad("0x" + signature.r.toString(16), 32),
-	// 	s: hexZeroPad("0x" + signature.s.toString(16), 32),
-	// })));
 	var signature = keyPair.sign(typedDataHash, { canonical: true });
-	console.log('xxxx ', joinSignature(splitSignature({
-		recoveryParam: signature.recoveryParam,
-		r: hexZeroPad("0x" + signature.r.toString(16), 32),
-		s: hexZeroPad("0x" + signature.s.toString(16), 32),
-	})))
 	return joinSignature(splitSignature({
 		recoveryParam: signature.recoveryParam,
 		r: hexZeroPad("0x" + signature.r.toString(16), 32),
@@ -95,7 +81,6 @@ async function signTypedData(privateKey, domain, safeTx, provider) {
 		return provider?.resolveName(name);
 	});
 	const safeHash = calculateSafeTransactionHash(populated.domain.chainId, populated.domain.verifyingContract, populated.value);
-	console.log('safeHash : ', safeHash);
 	const typedDataHash = arrayify(safeHash);
 	return keySignHash(privateKey, typedDataHash);
 }
@@ -112,6 +97,21 @@ function safeApproveHash(signerAddress) {
 
 }
 
+function encodeMetaTransaction(tx) {
+	const data = utils.arrayify(tx.data)
+	const encoded = utils.solidityPack(
+		["uint8", "address", "uint256", "uint256", "bytes"],
+		[tx.operation, tx.to, tx.value, data.length, data]
+	)
+	return encoded.slice(2)
+}
+
+function encodeMultiSend(txs) {
+	return "0x" + txs.map((tx) => encodeMetaTransaction(tx)).join("")
+}
+
+exports.encodeMultiSend = encodeMultiSend;
+exports.encodeMetaTransaction = encodeMetaTransaction;
 exports.keySignHash = keySignHash;
 exports.buildSafeTransaction = buildSafeTransaction;
 exports.safeApproveHash = safeApproveHash;

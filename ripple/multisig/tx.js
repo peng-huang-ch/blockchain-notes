@@ -8,8 +8,8 @@ const api = new RippleAPI({
 const jon = {
   account: 'rGtkPCrTgq5st3uSsyz5YnHMETYQdQofUS',
   secret: 'snuALrXSwbTHpWft3ibTA9ZzszC22',
-  privateKey: '0034C3148FC7664AE2DCFDF0B7AE33B9076D27F1663BFC94C46FE8EE652626885F',
-  publicKey: '0366CCF6281AF55D8BD53D19940448FBE9F2722D7B09BDE7F43F758A3DDFF06510',
+  privateKey: '',
+  publicKey: '',
 };
 const aya = {
   account: 'rhV1ZJ5SHs8Spbu4aXjAE225a1CzfoJnru',
@@ -18,7 +18,7 @@ const aya = {
 const bran = {
   account: 'rweTZdJmr67cVuWnqqUQbUqcDGugpnRehc',
   secret: 'ss2Zoo3b7DvbijGxrD8TtSatHCohU',
-  privateKey: '00967ED0662C83F75C90B6E1B780BCE1AAF15D7153CEF7DF675C4C1782395C5061',
+  privateKey: '',
   publicKey: '02AA3C6C46F2A5B6F72CDC2048A502BE9486972D0430EA88DF89837A028FBD0577',
 };
 
