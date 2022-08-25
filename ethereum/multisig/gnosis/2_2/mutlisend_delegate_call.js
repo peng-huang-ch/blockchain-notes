@@ -33,11 +33,6 @@ async function exec({
 		});
 	}
 
-	// var approved = safeApproveHash(sender);
-	// participants.push({
-	// 	signer: sender,
-	// 	data: approved.data,
-	// })
 	var signatures = buildSignatureBytes(participants);
 
 	const params = [
@@ -54,7 +49,6 @@ async function exec({
 	];
 
 	var input = multisigContract.methods.execTransaction(...params).encodeABI();
-	console.log("input : ", input);
 
 	const common = new Common({ chain: Chain.Rinkeby, hardfork: Hardfork.London });
 	const senderNonce = await web3.eth.getTransactionCount(sender);

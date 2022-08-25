@@ -23,7 +23,6 @@ const bran = {
 };
 
 const from_address = 'rfXgErjK96k59evDnC22zX7vRo2hYaSiqc';
-const secret = 'ssHAaRfvdDsF62da3dpDHgxHSnw4d';
 
 async function main() {
   await api.connect();

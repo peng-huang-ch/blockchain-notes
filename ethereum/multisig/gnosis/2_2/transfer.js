@@ -11,6 +11,7 @@ const { addHexPrefix, bufferToHex, toBuffer } = require('ethereumjs-util');
 const { stripHexPrefix } = require('ethjs-util');
 
 const { buildSignatureBytes, buildSafeTransaction, signTypedData, sendTx, safeApproveHash } = require('../gnosis');
+const { CustomChain } = require('@ethereumjs/common');
 
 
 // 2-2. eth transfer
@@ -42,7 +43,7 @@ async function exec_eth_2_2({
 		nonce: multiSigContractNonce,
 	});
 	const domain = { verifyingContract: multiSigAddress, chainId };
-
+	return;
 	for (const item of others) {
 		var approverData = await signTypedData(item.privateKey, domain, safeTx);
 		participants.push({
@@ -149,22 +150,31 @@ async function exec_erc20_2_2({
 		amount; // amount
 
 	var participants = [];
-	const chain = Chain.Rinkeby;
-	const safeSingleton = getSafeSingletonDeployment({ chain });
+	const safeSingleton = getSafeSingletonDeployment({ chain: chainId });
 	const safeSingletonABI = safeSingleton.abi;
 
 	const multisigContract = new Contract(safeSingletonABI, multiSigAddress);
 	multisigContract.setProvider(web3.currentProvider);
 	const threshold = await multisigContract.methods.getThreshold().call();
 	console.log('threshold : ', threshold);
-
+	// return;
 	const multiSigContractNonce = await multisigContract.methods.nonce().call();
 	const safeTx = buildSafeTransaction({
 		to: tokenAddress,
 		data,
 		nonce: multiSigContractNonce,
+		// refundReceiver: '0x0495EE61A6c19494Aa18326d08A961c446423cA2',
+		// gasToken: "0x01be23585060835e02b77ef475b0cc51aa1e0709",
+		// safeTxGas: "1000000",
+		// baseGas: "100000",
+		// gasPrice: '20000000000',
+		// safeTxGas: 52074,
+		// baseGas: 48464,
+		// gasPrice: "3333333334",
+		// gasToken: "0x0000000000000000000000000000000000000000"
 	});
-
+	console.log('safeTx : ', safeTx);
+	// 95396, 83331
 	for (const item of members) {
 		var approverData = await signTypedData(item.privateKey, domain, safeTx);
 		participants.push({
@@ -172,11 +182,9 @@ async function exec_erc20_2_2({
 			data: approverData
 		});
 	}
+
 	var approved = safeApproveHash(sender);
-	participants.push({
-		signer: sender,
-		data: approved.data,
-	})
+	participants.push(approved)
 	var signatures = buildSignatureBytes(participants);
 
 	const params = [
@@ -195,7 +203,9 @@ async function exec_erc20_2_2({
 	const safeSingletonContract = new Contract(safeSingletonABI);
 	var input = safeSingletonContract.methods.execTransaction(...params).encodeABI();
 
-	const common = new Common({ chain: Chain.Rinkeby, hardfork: Hardfork.London });
+	const common = Common.custom(CustomChain.PolygonMainnet, {
+		hardfork: Hardfork.London
+	});
 	const senderNonce = await web3.eth.getTransactionCount(sender);
 	const opts = { common };
 
@@ -240,33 +250,35 @@ async function exec_erc20_2_2({
 	console.log('txid 		: ', toHex(txHash));
 	console.log('serialized : ', bufferToHex(serialized));
 	console.log('sender 	: ', sender);
-
+	return;
 	const hash = await sendTx(web3, bufferToHex(serialized));
 	console.log('hash', hash);
 }
 
 async function main() {
-	const provider = 'https://rinkeby.infura.io/v3/de9290b603fc4609a6f0a65e23e8c7d3';
-	const chainId = 4;
+	const provider = 'https://polygon-rpc.com/';
+	const chainId = 137;
 	const web3 = new Web3(provider);
 
 	const sender = '0xD383ACF980b70855AB0C2c4AF0Adaa520E39Bcb3';
 	const senderPrivetKey = ''
 
 	const receiptor = '0x0495EE61A6c19494Aa18326d08A961c446423cA2';
-	// const tokenAddress = '0x01be23585060835e02b77ef475b0cc51aa1e0709';
-	const tokenAddress = '0x01be23585060835e02b77ef475b0cc51aa1e0709';
-	const multiSigAddress = '0xDbC2AEEa2EEa239Dce1d0762490FE8718396F8dD';
-	const members = [
-		// {
-		// 	address: '0x0495EE61A6c19494Aa18326d08A961c446423cA2',
-		// 	privateKey: ''
-		// },
-		{
-			address: '0xD383ACF980b70855AB0C2c4AF0Adaa520E39Bcb3',
-			privateKey: ''
+	const tokenAddress = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
+	const multiSigAddress = '0xfb8f30d39db5930b8db03d2d408edb28562c917a';
 
-		}
+	// const tokenAddress = '0x326c977e6efc84e512bb9c30f76e30c160ed06fb';
+	// const multiSigAddress = '0xe60CB774c8a5c443Cd5A833E2d0D902d4eC3F9E4';
+	const members = [
+		{
+			address: '0x0495EE61A6c19494Aa18326d08A961c446423cA2',
+			privateKey: ''
+		},
+		// {
+		// 	address: '0xD383ACF980b70855AB0C2c4AF0Adaa520E39Bcb3',
+		// 	privateKey: ''
+
+		// }
 	];
 
 	switch (process.argv[2]) {
