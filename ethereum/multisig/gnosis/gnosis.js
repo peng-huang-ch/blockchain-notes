@@ -81,6 +81,7 @@ async function signTypedData(privateKey, domain, safeTx, provider) {
 		return provider?.resolveName(name);
 	});
 	const safeHash = calculateSafeTransactionHash(populated.domain.chainId, populated.domain.verifyingContract, populated.value);
+	console.log('safeHash : ', safeHash);
 	const typedDataHash = arrayify(safeHash);
 	return keySignHash(privateKey, typedDataHash);
 }
