@@ -8,12 +8,13 @@ specifiers:
   '@bitgo/utxo-lib': ^1.9.4
   '@bitgo/utxo-lib-v2': npm:@bitgo/utxo-lib@^2.2.0
   '@clover-network/node-types': ^1.0.4
-  '@cosmjs/amino': ^0.27.0
-  '@cosmjs/crypto': ^0.27.0
-  '@cosmjs/encoding': ^0.27.0
-  '@cosmjs/launchpad': ^0.27.0
+  '@cosmjs/amino': ^0.28.11
+  '@cosmjs/crypto': ^0.28.0
+  '@cosmjs/encoding': ^0.28.0
+  '@cosmjs/launchpad': ^0.27.1
+  '@cosmjs/math': ^0.28.11
   '@cosmjs/proto-signing': ^0.28.10
-  '@cosmjs/stargate': ^0.27.0
+  '@cosmjs/stargate': ^0.28.0
   '@cryptoless/utxo-lib': https://gitpkg.now.sh/cryptoless/BitGoJS/modules/utxo-lib?f22b435db9dd991d260ecf97e5c65310f48e27f3
   '@emurgo/cardano-serialization-lib-nodejs': ^8.1.0
   '@ethereumjs/common': ^2.6.5
@@ -32,7 +33,7 @@ specifiers:
   axios: ^0.21.1
   bignumber.js: ^9.0.1
   bip39: ^3.0.4
-  bitcoinjs-lib: ^5.2.0
+  bitcoinjs-lib: ^6.0.2
   bitcoinjs-lib-v3: npm:bitcoinjs-lib@^3.3.2
   bitcore-lib: ^8.25.10
   bitcore-lib-cash: ^8.25.10
@@ -57,6 +58,7 @@ specifiers:
   keccak256: ^1.0.6
   lodash: ^4.17.21
   log4js: ^6.6.0
+  long: ^5.2.0
   merkletreejs: ^0.2.32
   node-fetch: ^2.6.1
   npm: ^8.13.2
@@ -80,14 +82,15 @@ specifiers:
 
 dependencies:
   '@bitgo/utxo-lib': 1.9.6
-  '@bitgo/utxo-lib-v2': /@bitgo/utxo-lib/2.4.0
+  '@bitgo/utxo-lib-v2': /@bitgo/utxo-lib/2.4.1
   '@clover-network/node-types': 1.0.5
-  '@cosmjs/amino': 0.27.1
-  '@cosmjs/crypto': 0.27.1
-  '@cosmjs/encoding': 0.27.1
+  '@cosmjs/amino': 0.28.11
+  '@cosmjs/crypto': 0.28.11
+  '@cosmjs/encoding': 0.28.11
   '@cosmjs/launchpad': 0.27.1
+  '@cosmjs/math': 0.28.11
   '@cosmjs/proto-signing': 0.28.11
-  '@cosmjs/stargate': 0.27.1
+  '@cosmjs/stargate': 0.28.11
   '@cryptoless/utxo-lib': '@gitpkg.now.sh/cryptoless/BitGoJS/modules/utxo-lib?f22b435db9dd991d260ecf97e5c65310f48e27f3'
   '@emurgo/cardano-serialization-lib-nodejs': 8.1.0
   '@ethereumjs/common': 2.6.5
@@ -106,7 +109,7 @@ dependencies:
   axios: 0.21.4
   bignumber.js: 9.0.2
   bip39: 3.0.4
-  bitcoinjs-lib: 5.2.0
+  bitcoinjs-lib: 6.0.2
   bitcoinjs-lib-v3: /bitcoinjs-lib/3.3.2
   bitcore-lib: 8.25.31
   bitcore-lib-cash: 8.25.31
@@ -130,6 +133,7 @@ dependencies:
   keccak256: 1.0.6
   lodash: 4.17.21
   log4js: 6.6.0
+  long: 5.2.0
   merkletreejs: 0.2.32
   node-fetch: 2.6.7
   npm: 8.14.0
@@ -527,10 +531,23 @@ packages:
       nanoassert: 1.1.0
     dev: false
 
+  /@bitgo/blake2b-wasm/3.0.3:
+    resolution: {integrity: sha512-1D4VUYHzMZC2VBAa+WcNiVC3//T6178bLeaUCXHHVFspR/ZTUO8ZVQ9x4vjC9XtMe4Ne79iCzruqS0EUFGqT8A==}
+    dependencies:
+      nanoassert: 1.1.0
+    dev: false
+
   /@bitgo/blake2b/3.0.2:
     resolution: {integrity: sha512-6WLZjM885COVZi8xUhOJxamY+nWNgfcsCRNTJ6cUeaV1pkaIh9LKmZs1gugvLg6ceLLZA5R2A9dEV/2Vs623lQ==}
     dependencies:
       '@bitgo/blake2b-wasm': 3.0.2
+      nanoassert: 2.0.0
+    dev: false
+
+  /@bitgo/blake2b/3.0.3:
+    resolution: {integrity: sha512-5T5aO21oEwpyw6mCMjBHFQshQ2RwbgBYn1DUNfYRJzpTIw7gCNqpjgW2uKNz7lAL4PrOMueY0Ev5nA6ZapTfrw==}
+    dependencies:
+      '@bitgo/blake2b-wasm': 3.0.3
       nanoassert: 2.0.0
     dev: false
 
@@ -559,16 +576,18 @@ packages:
       secp256k1: 3.8.0
     dev: false
 
-  /@bitgo/utxo-lib/2.4.0:
-    resolution: {integrity: sha512-UTFGy9B1PNO874Ugd8AkkTsYR59w5fLaq1FV5njgOCOxyPM1Rpi796mOwJpxKrL/5aZBgWRoKHKYzM3U2ZaEiw==}
+  /@bitgo/utxo-lib/2.4.1:
+    resolution: {integrity: sha512-hy992E7xdZBBdPF1Gld3bpiTuQn1XWZBfGj3GnDmeP3/ocFvd73C1Tugh5GDn1rLI1fMJK4VwgExmzrxPvgKMA==}
     engines: {node: '>=10.22.0 <17', npm: '>=3.10.10'}
     dependencies:
-      '@bitgo/blake2b': 3.0.2
+      '@bitgo/blake2b': 3.0.3
       assert: 2.0.0
+      bip32: 2.0.6
       bitcoin-ops: 1.4.1
       bitcoinjs-lib: /@bitgo/bitcoinjs-lib/6.1.0-rc.3
       bs58check: 2.1.2
       cashaddress: 1.1.0
+      tiny-secp256k1: 1.1.6
       typeforce: 1.18.0
       varuint-bitcoin: 1.1.2
     dev: false
@@ -581,7 +600,7 @@ packages:
     resolution: {integrity: sha512-wB6uo+3A50m0sW/EWcU64xpV/8wShZ6bMTa7pF8eYsTrSkQA7oLUIJcs/wb8g4y2Oyq701BaGiO6n/ak5WXO1w==}
     dependencies:
       '@noble/hashes': 1.1.2
-      protobufjs: 6.10.3
+      protobufjs: 6.11.3
     dev: false
 
   /@cosmjs/amino/0.27.1:
@@ -645,10 +664,10 @@ packages:
       readonly-date: 1.0.0
     dev: false
 
-  /@cosmjs/json-rpc/0.27.1:
-    resolution: {integrity: sha512-AKvsllGr6oN5kiroatIeIIxRdCFetLd8LCWV04RRNkoJ2OefDNb46VlWEQ+gI3ay5GgfVjB9qAcfvbJyrcEv+A==}
+  /@cosmjs/json-rpc/0.28.11:
+    resolution: {integrity: sha512-YNZTozu5yWHyGGet5Wfc0CcxQezkMr37YaeU9elCaa11ClHlYAQ2NrPpPBOmgnJKsMhzfiKcAE9Sf6f4a0hCxA==}
     dependencies:
-      '@cosmjs/stream': 0.27.1
+      '@cosmjs/stream': 0.28.11
       xstream: 11.14.0
     dev: false
 
@@ -678,17 +697,6 @@ packages:
       bn.js: 5.2.1
     dev: false
 
-  /@cosmjs/proto-signing/0.27.1:
-    resolution: {integrity: sha512-t7/VvQivMdM1KgKWai/9ZCEcGFXJtr9Xo0hGcPLTn9wGkh9tmOsUXINYVMsf5D/jWIm1MDPbGCYfdb9V1Od4hw==}
-    dependencies:
-      '@cosmjs/amino': 0.27.1
-      '@cosmjs/crypto': 0.27.1
-      '@cosmjs/math': 0.27.1
-      cosmjs-types: 0.4.1
-      long: 4.0.0
-      protobufjs: 6.10.3
-    dev: false
-
   /@cosmjs/proto-signing/0.28.11:
     resolution: {integrity: sha512-ym0DpLff+0RBkD/mtFf6wrzyuGhcbcjuDMEdcUWOrJTo6n8DXeRmHkJkyy/mrG3QC4tQX/A81+DhfkANQmgcxw==}
     dependencies:
@@ -701,10 +709,10 @@ packages:
       long: 4.0.0
     dev: false
 
-  /@cosmjs/socket/0.27.1:
-    resolution: {integrity: sha512-bKCRsaSXh/TA7efxVCogzS2K3cgC40Ge2itFYmTfgpOE+++52FchCblVCsCYwMNDLS497RP4P0GbeC1VEBToMA==}
+  /@cosmjs/socket/0.28.11:
+    resolution: {integrity: sha512-4BhsWN984SLBhwPCD89riQ3SEJzJ1RLJPeP6apIGjhh6pguQZmwa2U/TZjnEUOGnJkUG2FZUH99jRGSTYaIvZg==}
     dependencies:
-      '@cosmjs/stream': 0.27.1
+      '@cosmjs/stream': 0.28.11
       isomorphic-ws: 4.0.1_ws@7.5.8
       ws: 7.5.8
       xstream: 11.14.0
@@ -713,20 +721,20 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@cosmjs/stargate/0.27.1:
-    resolution: {integrity: sha512-7hAIyNd6NbhQA51w9mPVyMYw515Hpj0o7SXMaqbc7nxs3hkJNMONQ9RakyMm0U/WeCd6ObcSaPEcdkqbfkc+mg==}
+  /@cosmjs/stargate/0.28.11:
+    resolution: {integrity: sha512-UyFH/mTNNKTZohVhj+SmjCRv/xopqU/UinGedmWzs4MqEZteX9xs6D3HTmRCgpmBQ03lpbTslE/FhhT9Hkl9KQ==}
     dependencies:
       '@confio/ics23': 0.6.8
-      '@cosmjs/amino': 0.27.1
-      '@cosmjs/encoding': 0.27.1
-      '@cosmjs/math': 0.27.1
-      '@cosmjs/proto-signing': 0.27.1
-      '@cosmjs/stream': 0.27.1
-      '@cosmjs/tendermint-rpc': 0.27.1
-      '@cosmjs/utils': 0.27.1
+      '@cosmjs/amino': 0.28.11
+      '@cosmjs/encoding': 0.28.11
+      '@cosmjs/math': 0.28.11
+      '@cosmjs/proto-signing': 0.28.11
+      '@cosmjs/stream': 0.28.11
+      '@cosmjs/tendermint-rpc': 0.28.11
+      '@cosmjs/utils': 0.28.11
       cosmjs-types: 0.4.1
       long: 4.0.0
-      protobufjs: 6.10.3
+      protobufjs: 6.11.3
       xstream: 11.14.0
     transitivePeerDependencies:
       - bufferutil
@@ -734,21 +742,22 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@cosmjs/stream/0.27.1:
-    resolution: {integrity: sha512-cEyEAVfXEyuUpKYBeEJrOj8Dp/c+M6a0oGJHxvDdhP5gSsaeCPgQXrh7qZFBiUfu3Brmqd+e/bKZm+068l9bBw==}
+  /@cosmjs/stream/0.28.11:
+    resolution: {integrity: sha512-3b6P4Il8mYzvY2bvEQyzgP+cm0HIGSpHNtuGjiWsQF3Wtp450iVRfEJqdt4+91vvxzfdjQEkQOLMaymnswX3sw==}
     dependencies:
       xstream: 11.14.0
     dev: false
 
-  /@cosmjs/tendermint-rpc/0.27.1:
-    resolution: {integrity: sha512-eN1NyBYIiFutDNleEaTfvIJ3S3KA1gP45UHaLhSETm8KyiaUqg/b0Mj6sp7J3h4BhgwLq2zn/TDtIn0k5luedg==}
+  /@cosmjs/tendermint-rpc/0.28.11:
+    resolution: {integrity: sha512-TUhWsUYxbKftQmHQK5TBH62vNaKB1ybxoFZ2uJtGMVvY3jcBux7P0Ll/u5nwrM0ETAeo2RjucehJUpGBy9q+HQ==}
     dependencies:
-      '@cosmjs/crypto': 0.27.1
-      '@cosmjs/encoding': 0.27.1
-      '@cosmjs/json-rpc': 0.27.1
-      '@cosmjs/math': 0.27.1
-      '@cosmjs/socket': 0.27.1
-      '@cosmjs/stream': 0.27.1
+      '@cosmjs/crypto': 0.28.11
+      '@cosmjs/encoding': 0.28.11
+      '@cosmjs/json-rpc': 0.28.11
+      '@cosmjs/math': 0.28.11
+      '@cosmjs/socket': 0.28.11
+      '@cosmjs/stream': 0.28.11
+      '@cosmjs/utils': 0.28.11
       axios: 0.21.4
       readonly-date: 1.0.0
       xstream: 11.14.0
@@ -2731,10 +2740,6 @@ packages:
     resolution: {integrity: sha512-J8xLz7q2OFulZ2cyGTLE1TbbZcjpno7FaN6zdJNrgAdrJ+DZzh/uFR6YrTb4C+nXakvud8Q4+rbhoIWlYQbUFQ==}
     dev: false
 
-  /@types/node/13.13.52:
-    resolution: {integrity: sha512-s3nugnZumCC//n4moGGe6tkNMyYEdaDBitVjwPxXmR5lnMG5dHePinH2EdxkG3Rh1ghFHHixAG4NJhpJW1rthQ==}
-    dev: false
-
   /@types/node/18.0.4:
     resolution: {integrity: sha512-M0+G6V0Y4YV8cqzHssZpaNCqvYwlCiulmm0PwpNLF55r/+cT8Ol42CHRU1SEaYFH2rTwiiE1aYg/2g2rrtGdPA==}
 
@@ -3277,22 +3282,15 @@ packages:
       wif: 2.0.6
     dev: false
 
-  /bitcoinjs-lib/5.2.0:
-    resolution: {integrity: sha512-5DcLxGUDejgNBYcieMIUfjORtUeNWl828VWLHJGVKZCb4zIS1oOySTUr0LGmcqJBQgTBz3bGbRQla4FgrdQEIQ==}
+  /bitcoinjs-lib/6.0.2:
+    resolution: {integrity: sha512-I994pGt9cL5s5OA6mkv1e8IuYcsKN2ORXnWbkqAXLNGvEnOHBhKBSvCjFl7YC2uVoJnfr/iwq7JMrq575SYO5w==}
     engines: {node: '>=8.0.0'}
     dependencies:
-      bech32: 1.1.4
+      bech32: 2.0.0
       bip174: 2.1.0
-      bip32: 2.0.6
-      bip66: 1.1.5
-      bitcoin-ops: 1.4.1
       bs58check: 2.1.2
       create-hash: 1.2.0
-      create-hmac: 1.1.7
-      merkle-lib: 2.0.10
-      pushdata-bitcoin: 1.0.1
-      randombytes: 2.1.0
-      tiny-secp256k1: 1.1.6
+      ripemd160: 2.0.2
       typeforce: 1.18.0
       varuint-bitcoin: 1.1.2
       wif: 2.0.6
@@ -6175,6 +6173,10 @@ packages:
     resolution: {integrity: sha512-XsP+KhQif4bjX1kbuSiySJFNAehNxgLb6hPRGJ9QsUr8ajHkuXGdrHmFUTUUXhDwVX2R5bY4JNZEwbUiMhV+MA==}
     dev: false
 
+  /long/5.2.0:
+    resolution: {integrity: sha512-9RTUNjK60eJbx3uz+TEGF7fUr29ZDxR5QzXcyDpeSfeH28S9ycINflOgOlppit5U+4kNTe83KQnMEerw7GmE8w==}
+    dev: false
+
   /loupe/2.3.4:
     resolution: {integrity: sha512-OvKfgCC2Ndby6aSTREl5aCCPTNIzlDfQZvZxNUrBrihDhL3xcrYegTblhmEiCrg2kKQz4XsFIaemE5BF4ybSaQ==}
     dependencies:
@@ -6934,26 +6936,6 @@ packages:
   /propagate/2.0.1:
     resolution: {integrity: sha512-vGrhOavPSTz4QVNuBNdcNXePNdNMaO1xj9yBeH1ScQPjk/rhg9sSlCXPhMkFuaNNW/syTvYqsnbIJxMBfRbbag==}
     engines: {node: '>= 8'}
-    dev: false
-
-  /protobufjs/6.10.3:
-    resolution: {integrity: sha512-yvAslS0hNdBhlSKckI4R1l7wunVilX66uvrjzE4MimiAt7/qw1nLpMhZrn/ObuUTM/c3Xnfl01LYMdcSJe6dwg==}
-    hasBin: true
-    requiresBuild: true
-    dependencies:
-      '@protobufjs/aspromise': 1.1.2
-      '@protobufjs/base64': 1.1.2
-      '@protobufjs/codegen': 2.0.4
-      '@protobufjs/eventemitter': 1.1.0
-      '@protobufjs/fetch': 1.1.0
-      '@protobufjs/float': 1.0.2
-      '@protobufjs/inquire': 1.1.0
-      '@protobufjs/path': 1.1.2
-      '@protobufjs/pool': 1.1.0
-      '@protobufjs/utf8': 1.1.0
-      '@types/long': 4.0.2
-      '@types/node': 13.13.52
-      long: 4.0.0
     dev: false
 
   /protobufjs/6.11.3:
@@ -8752,7 +8734,7 @@ packages:
     version: 2.1.0
     engines: {node: '>=10.22.0 <17', npm: '>=3.10.10'}
     dependencies:
-      '@bitgo/blake2b': 3.0.2
+      '@bitgo/blake2b': 3.0.3
       bitcoin-ops: 1.4.1
       bitcoinjs-lib: github.com/cryptoless/bitcoinjs-lib/b870a6ec65610bded74d5d1e77c4038c49f96541
       bs58check: 2.1.2
