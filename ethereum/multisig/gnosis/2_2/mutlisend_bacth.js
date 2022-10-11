@@ -1,5 +1,6 @@
 const assert = require('assert');
 const Web3 = require('web3');
+const ethers = require('ethers')
 const Web3Method = require('web3-core-method');
 const { FeeMarketEIP1559Transaction: Transaction } = require('@ethereumjs/tx');
 const { default: Common, Chain, Hardfork } = require('@ethereumjs/common');
@@ -11,17 +12,24 @@ const { bufferToHex, toBuffer, addHexPrefix } = require('ethereumjs-util');
 const { buildSignatureBytes, buildSafeTransaction, signTypedData, sendTx, safeApproveHash, keySignHash, encodeMultiSend } = require('../gnosis');
 const { utils } = require('ethers');
 
+function getRandomAddress() {
+	const wallet = ethers.Wallet.createRandom()
+	console.log('address:', wallet.address)
+	console.log('mnemonic:', wallet.mnemonic.phrase)
+	console.log('privateKey:', wallet.privateKey)
+	return wallet.address;
+}
 async function sign({
 	web3,
 	chainId,
 	members,
-	multisigContract,
+	safeContract,
 	safeTx
 }) {
-	const safeAddress = multisigContract._address;
+	const safeAddress = safeContract._address;
 	const domain = { verifyingContract: safeAddress, chainId };
 	var participants = [];
-	multisigContract.setProvider(web3.currentProvider);
+	safeContract.setProvider(web3.currentProvider);
 
 	for (const item of members) {
 		var approverData = await signTypedData(item.privateKey, domain, safeTx);
@@ -44,7 +52,7 @@ async function sign({
 		signatures,
 	];
 
-	var input = multisigContract.methods.execTransaction(...params).encodeABI();
+	var input = safeContract.methods.execTransaction(...params).encodeABI();
 	return input;
 }
 
@@ -78,15 +86,42 @@ async function main() {
 	const multiSendHandlerAddress = multiSend.networkAddresses[chainId];
 	console.log('multiSendHandlerAddress : ', multiSendHandlerAddress);
 	const multiSendABI = multiSend.abi;
-	const multisigContract = new Contract(safeSingletonABI, safeAddress);
-	multisigContract.setProvider(web3.currentProvider);
-	// var multiSigContractNonce = 10;
-	var multiSigContractNonce = await multisigContract.methods.nonce().call();
-	const safeTxs = [
-		buildSafeTransaction({ to: tokenAddress, operation: 0, nonce: 15, data: '0xa9059cbb000000000000000000000000d383acf980b70855ab0c2c4af0adaa520e39bcb30000000000000000000000000000000000000000000000000de0b6b3a7640000' }),
-		buildSafeTransaction({ to: tokenAddress, operation: 0, nonce: 16, data: '0xa9059cbb000000000000000000000000d383acf980b70855ab0c2c4af0adaa520e39bcb30000000000000000000000000000000000000000000000001bc16d674ec80000' }),
-	]
-	const inputs = await Promise.all(safeTxs.map((tx) => sign({ web3, chainId, members, multisigContract, safeTx: tx })));
+	const safeContract = new Contract(safeSingletonABI, safeAddress);
+	safeContract.setProvider(web3.currentProvider);
+	// var safeContractNonce = 10;
+	var safeContractNonce = await safeContract.methods.nonce().call();
+
+	// const addresses = [
+	// 	'0x0495EE61A6c19494Aa18326d08A961c446423cA2',
+	// 	'0xD383ACF980b70855AB0C2c4AF0Adaa520E39Bcb3',
+	// 	'0xFe7b59Eb9cFB13fb024efD08759Ce4f588CA7363',
+	// 	'0xE6bac7d1B67690019Dc33fC29F9f156AEa6894B2',
+	// 	'0x0d5A689D6a973E945cbBfab37202A1788E5588E7',
+	// 	'0xbDb3bd7b3F3DAEADC58D00EF5f15ED9a476B8fe3',
+	// 	'0x2B0EfCF16EC1E4C5eD82dBB4Fce9B4811485e650',
+	// 	getRandomAddress(),
+	// 	getRandomAddress(),
+	// 	getRandomAddress(),
+	// ];
+
+	const count = 45;
+	const addresses = Array(count).fill(0).map(() => getRandomAddress());
+
+	const safeTxs = Array(count).fill(0).map((_, i) => {
+		var nonce = +safeContractNonce + i * 2;
+		const iface = new utils.Interface(['function transfer(address to, uint256 value)']);
+		const address = addresses[i];
+		const value = 1000000;
+		const data = iface.encodeFunctionData('transfer', [address, value]);
+		return [
+			buildSafeTransaction({ to: address, operation: 0, nonce, value }), // ETH
+			buildSafeTransaction({ to: tokenAddress, operation: 0, nonce: nonce + 1, data }), // ERC20
+		]
+	}).flat();
+	console.log('safeTxs : ', safeTxs);
+
+	const inputs = await Promise.all(safeTxs.map((tx) => sign({ web3, chainId, members, safeContract, safeTx: tx })));
+
 	const txs = inputs.map((input) => {
 		return {
 			operation: 0,
@@ -95,13 +130,39 @@ async function main() {
 			data: input,
 		}
 	})
-	const transactions = encodeMultiSend(txs)
+
+	var safeAddress1 = '0x5B6200F07C235A0Eb085282B3173ac6682bfcbBF';
+	var safeContract1 = new Contract(safeSingletonABI, safeAddress1);
+	safeContract1.setProvider(web3.currentProvider);
+	var safeContractNonce1 = await safeContract1.methods.nonce().call();
+	// console.log('safeContractNonce1 : ', safeContractNonce1);
+	const safeTxs1 = Array(count).fill().map((_, i) => {
+		var nonce = +safeContractNonce1 + i * 2;
+		const iface = new utils.Interface(['function transfer(address to, uint256 value)']);
+		const address = addresses[i];
+		const value = 1000000;
+		const data = iface.encodeFunctionData('transfer', [address, value]);
+		return [
+			buildSafeTransaction({ to: address, operation: 0, nonce, value }),
+			buildSafeTransaction({ to: tokenAddress, operation: 0, nonce: nonce + 1, data }),
+		]
+	}).flat();
+	const inputs2 = await Promise.all(safeTxs1.map((tx) => sign({ web3, chainId, members, safeContract: safeContract1, safeTx: tx })));
+	const txs2 = inputs2.map((input) => {
+		return {
+			operation: 0,
+			to: safeAddress1,
+			value: 0,
+			data: input,
+		}
+	})
+
+	const transactions = encodeMultiSend([...txs, ...txs2]);
 	const iface = new utils.Interface(multiSendABI);
 	const data = iface.encodeFunctionData('multiSend', [transactions])
 
 	// common
 	const senderNonce = await web3.eth.getTransactionCount(sender);
-	const opts = { common };
 
 	const txData = {
 		from: sender,
@@ -123,17 +184,17 @@ async function main() {
 
 	const block = await web3.eth.getBlock('pending');
 	const baseFeePerGas = block['baseFeePerGas'];
-	const maxFeePerGas = toBN(baseFeePerGas).add(toBN(maxPriorityFeePerGas).muln(2));
+	const maxFeePerGas = toBN(baseFeePerGas).add(toBN(maxPriorityFeePerGas));
 
 	const tx = Transaction.fromTxData(
 		{
 			maxFeePerGas,
-			maxPriorityFeePerGas,
+			maxPriorityFeePerGas: toBN(maxPriorityFeePerGas),
 			gasLimit: toHex(toBN(gasLimit)),
 			value: '0x00',
-			...sendTx,
+			...txData,
 		},
-		opts
+		{ common }
 	);
 	const signedTx = tx.sign(toBuffer(addHexPrefix(senderPrivetKey)));
 	const serialized = signedTx.serialize();
