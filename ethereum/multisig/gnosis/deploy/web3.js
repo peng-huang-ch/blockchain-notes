@@ -7,6 +7,8 @@ const Contract = require('web3-eth-contract');
 const { toBN, toHex } = require('web3-utils');
 const { bufferToHex, toBuffer } = require('ethereumjs-util');
 const { sendTx } = require('../gnosis');
+const { Chain } = require('@ethereumjs/common');
+const { addHexPrefix } = require('ethereumjs-util');
 
 async function deploy({
 	chainId,
@@ -57,13 +59,14 @@ async function deploy({
 
 	// const nonce = await web3.eth.getTransactionCount(sender);
 	const nonce = await provider.getTransactionCount(sender, 'pending');
-
+	console.log('sender : ', sender);
+	console.log('nonce : ', nonce);
 	const opts = { common };
-	// const { maxFeePerGas, maxPriorityFeePerGas, gasPrice } = await provider.getFeeData();
-	const { gasPrice } = await provider.getFeeData();
+	const { maxFeePerGas, maxPriorityFeePerGas, gasPrice } = await provider.getFeeData();
+	// const { gasPrice } = await provider.getFeeData();
 	const block = await provider.getBlock('latest');
-	const maxPriorityFeePerGas = ethers.BigNumber.from("30000000000");
-	const maxFeePerGas = block.baseFeePerGas.mul(2).add(maxPriorityFeePerGas);
+	// const maxPriorityFeePerGas = ethers.BigNumber.from("30000000000");
+	// const maxFeePerGas = block.baseFeePerGas.mul(2).add(maxPriorityFeePerGas);
 
 	console.log('maxFeePerGas : ', maxFeePerGas.toString());
 	console.log('maxPriorityFeePerGas : ', maxPriorityFeePerGas.toString());
@@ -75,7 +78,7 @@ async function deploy({
 		value: '0x00',
 	});
 
-	const tx = Transaction.fromTxData(
+	const typed = Transaction.fromTxData(
 		{
 			maxFeePerGas: maxFeePerGas.toHexString(),
 			maxPriorityFeePerGas: maxPriorityFeePerGas.toHexString(),
@@ -89,10 +92,11 @@ async function deploy({
 		opts
 	);
 
-	const signedTx = tx.sign(toBuffer(privateKey));
-	const serialized = signedTx.serialize();
-	const txid = signedTx.hash().toString('hex');
-	console.log('txid 		: ', txid);
+	console.log('privateKey :', privateKey)
+	const tx = typed.sign(toBuffer(privateKey));
+	const serialized = tx.serialize();
+	const txId = tx.hash().toString('hex');
+	console.log('txId 		: ', txId);
 	console.log('serialized : ', bufferToHex(serialized));
 	console.log('sender 	: ', sender);
 
@@ -113,9 +117,11 @@ async function deploy({
 	console.log('hash', hash);
 }
 
-const node = 'https://polygon-rpc.com';
-const chainId = 137;
-const common = Common.custom(CustomChain.PolygonMainnet, { eips: [1559], hardfork: Hardfork.London });
+// const node = 'https://polygon-rpc.com';
+const node = 'https://goerli.infura.io/v3/de9290b603fc4609a6f0a65e23e8c7d3';
+const chainId = Chain.Goerli;
+// const common = Common.custom(chainId, { eips: [1559], hardfork: Hardfork.London });
+const common = new Common({ chain: Chain.Goerli, hardfork: Hardfork.London, eips: [3860] })
 const sender = '0xD383ACF980b70855AB0C2c4AF0Adaa520E39Bcb3';
 const privateKey = '';
 
@@ -124,5 +130,5 @@ deploy({
 	chainId,
 	common,
 	sender,
-	privateKey
+	privateKey: addHexPrefix(privateKey),
 }).catch(console.error);
