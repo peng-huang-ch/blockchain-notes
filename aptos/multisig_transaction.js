@@ -8,9 +8,6 @@ const nacl = require('tweetnacl');
 const NODE_URL = "https://fullnode.devnet.aptoslabs.com";
 const FAUCET_URL = "https://faucet.devnet.aptoslabs.com";
 const aptosCoinStore = '0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>';
-const COIN_ABIS = [
-	"01087472616E73666572000000000000000000000000000000000000000000000000000000000000000104636F696E3C205472616E73666572732060616D6F756E7460206F6620636F696E732060436F696E54797065602066726F6D206066726F6D6020746F2060746F602E0109636F696E5F747970650202746F0406616D6F756E7402"
-];
 
 // https://github.com/aptos-labs/aptos-core/blob/main/ecosystem/typescript/sdk/examples/typescript/multisig_transaction.ts
 async function sdk() {
@@ -135,6 +132,7 @@ async function sdk() {
 }
 
 async function main() {
+	const expiration_timestamp_secs = 1672531204n;
 	const client = new AptosClient(NODE_URL);
 	const faucetClient = new FaucetClient(NODE_URL, FAUCET_URL);
 
@@ -150,7 +148,11 @@ async function main() {
 	const privateKeyHex3 = '0x80788bafb59eecd31aeb869f3934916dee373b458d12fb71de1e629e5633c16d';
 	const privateKeyBytes3 = new HexString(privateKeyHex3).toUint8Array();
 	const account3 = new AptosAccount(privateKeyBytes3);
-
+	{
+		console.log('account1	: ', account1.toPrivateKeyObject());
+		console.log('account2	: ', account2.toPrivateKeyObject());
+		console.log('account3	: ', account3.toPrivateKeyObject());
+	}
 	// Create a 2 out of 3 MultiEd25519PublicKey. '2 out of 3' means for a multisig transaction
 	// to be executed, at least 2 accounts must have signed the transaction.
 	// See https://aptos-labs.github.io/ts-sdk-doc/classes/TxnBuilderTypes.MultiEd25519PublicKey.html#constructor
@@ -169,7 +171,9 @@ async function main() {
 	const authKey = TxnBuilderTypes.AuthenticationKey.fromMultiEd25519PublicKey(multiSigPublicKey);
 
 	// Derive the multisig account address and fund the address with 5000 AptosCoin.
+
 	const multiSigAccountAddress = authKey.derivedAddress();
+	console.log('multiSigAccountAddress : ', multiSigAccountAddress);
 	// await faucetClient.fundAccount(multiSigAccountAddress, 100_000_000);
 	console.log('Funded multisig account address', multiSigAccountAddress.hex());
 
@@ -184,10 +188,10 @@ async function main() {
 		const account = new AptosAccount(new HexString(privateKeyHex).toUint8Array());
 		receiverAccount = account;
 		// Creates a receiver account and fund the account with 0 AptosCoin
-		resources = await client.getAccountResources(account.address());
-		accountResource = resources.find((r) => r.type === aptosCoinStore);
-		balance = accountResource?.data?.coin.value;
-		console.log('Balance of receiver account address', balance);
+		// resources = await client.getAccountResources(account.address());
+		// accountResource = resources.find((r) => r.type === aptosCoinStore);
+		// balance = accountResource?.data?.coin.value;
+		// console.log('Balance of receiver account address', balance);
 	}
 
 	const typeTag = new TxnBuilderTypes.TypeTagStruct(TxnBuilderTypes.StructTag.fromString("0x1::aptos_coin::AptosCoin"));
@@ -203,9 +207,11 @@ async function main() {
 			// The coin type to transfer
 			[typeTag],
 			// Arguments for function `transfer`: receiver account address and amount to transfer
-			[BCS.bcsToBytes(TxnBuilderTypes.AccountAddress.fromHex(receiverAccount.address())), BCS.bcsSerializeUint64(123)],
+			[BCS.bcsToBytes(TxnBuilderTypes.AccountAddress.fromHex(receiverAccount.address())), BCS.bcsSerializeUint64(717)],
 		),
 	);
+	console.log('receiver address : ', receiverAccount.address());
+	console.log("payload 		  : ", HexString.fromUint8Array(BCS.bcsToBytes(entryFunctionPayload)).hex());
 
 	// const transactionBuilder = new TransactionBuilderABI(COIN_ABIS.map((abi) => new HexString(abi).toUint8Array()));
 	// const entryFunctionPayload = transactionBuilder.buildTransactionPayload(
@@ -231,20 +237,24 @@ async function main() {
 		// Gas price per unit
 		BigInt(100),
 		// Expiration timestamp. Transaction is discarded if it is not executed within 10 seconds from now.
-		BigInt(Math.floor(Date.now() / 1000) + 10),
+		BigInt(expiration_timestamp_secs),
 		new TxnBuilderTypes.ChainId(chainId),
 	);
 
-
-
 	// account1 and account3 sign the transaction
 	const signingMsg = TransactionBuilder.getSigningMessage(rawTxn);
+
+	console.log("rawTxn bytes	  : ", HexString.fromUint8Array(BCS.bcsToBytes(rawTxn)).hex());
+	console.log("signingMsg 	  : ", HexString.fromUint8Array(signingMsg).hex());
+
 	const signedMsg1 = nacl.sign(signingMsg, account1.signingKey.secretKey);
 	const sigHexStr1 = HexString.fromUint8Array(signedMsg1.slice(0, 64));
 	const signedMsg3 = nacl.sign(signingMsg, account3.signingKey.secretKey);
 	const sigHexStr3 = HexString.fromUint8Array(signedMsg3.slice(0, 64));
 
 	const bitmap = TxnBuilderTypes.MultiEd25519Signature.createBitmap([0, 2]);
+	console.log("signedMsg1 : ", HexString.fromUint8Array(signedMsg1).hex())
+	console.log("signedMsg3 : ", HexString.fromUint8Array(signedMsg3).hex())
 
 	// See https://aptos-labs.github.io/ts-sdk-doc/classes/TxnBuilderTypes.MultiEd25519Signature.html#constructor
 	const multiEd25519Sig = new TxnBuilderTypes.MultiEd25519Signature(
@@ -258,8 +268,11 @@ async function main() {
 		multiSigPublicKey,
 		multiEd25519Sig,
 	);
+
 	const signedTxn = new TxnBuilderTypes.SignedTransaction(rawTxn, authenticator);
 	const bcsTxn = BCS.bcsToBytes(signedTxn);
+
+
 	const transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
 
 	console.log('Transaction submitted tx hash : ', transactionRes.hash);
@@ -275,7 +288,6 @@ async function main() {
 	balance = parseInt(accountResource?.data?.coin.value);
 	console.log(`receiver account coins: ${balance}.`);
 }
-
 
 // sdk().catch(console.error);
 main().catch(console.error);

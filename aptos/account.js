@@ -1,4 +1,5 @@
 const aptos = require('aptos');
+const assert = require('assert').strict;
 const nacl = require('tweetnacl');
 
 async function main() {
@@ -11,7 +12,7 @@ async function main() {
 
 	const account = new aptos.AptosAccount(privateKeyHexStr.toUint8Array());
 	const address = account.address();
-
+	// fund account
 	{
 		const faucetClient = new aptos.FaucetClient(NODE_URL, FAUCET_URL, null);
 		await faucetClient.fundAccount('0x689b4250f7d1c3784c5fb947fc9f15fd8e1842b4425976d8a44e4221150b1f79', 100_000_000);
@@ -40,11 +41,22 @@ async function main() {
 		console.log('signedMsg : ', aptos.HexString.fromUint8Array(signedMsg).hex());
 	}
 
-	// // faucet
-	// {
-	// 	const faucetClient = new aptos.FaucetClient(NODE_URL, FAUCET_URL, null);
-	// 	await faucetClient.fundAccount('0x76ee354c4354ae46f741bdf5cdf8987d6e3dc8dfbe62b10a0b7f2de27898bdaf', 100_000_000);
-	// }
+	// public key -> address
+	{
+		const pubKeyHexStr = aptos.HexString.ensure('0xf5678bc8513c5247ad8a9ee547bc39be283a97de6511facea0e66ef6b91c5a47');
+
+		const pubKey = new aptos.TxnBuilderTypes.Ed25519PublicKey(pubKeyHexStr.toUint8Array())
+		const multiSigPublicKey = new aptos.TxnBuilderTypes.MultiEd25519PublicKey([pubKey], 0);
+		const authKey = aptos.TxnBuilderTypes.AuthenticationKey.fromMultiEd25519PublicKey(multiSigPublicKey);
+		const address = authKey.derivedAddress().hex();
+		// assert.strictEqual(address, '0xf7201ffdfac8f6d3b2ea5c98b4932b3c4b7d3c3565e734288a374c9f0616333b')
+	}
+
+	// faucet
+	{
+		const faucetClient = new aptos.FaucetClient(NODE_URL, FAUCET_URL, null);
+		await faucetClient.fundAccount('0xf7201ffdfac8f6d3b2ea5c98b4932b3c4b7d3c3565e734288a374c9f0616333b', 100_000_000);
+	}
 }
 
 main().catch(console.error);
