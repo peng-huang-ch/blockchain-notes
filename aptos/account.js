@@ -1,6 +1,14 @@
 const aptos = require('aptos');
 const assert = require('assert').strict;
 const nacl = require('tweetnacl');
+const { sha3_256 } = require('@noble/hashes/sha3');
+
+function pubKeyToAddress(publicKey) {
+	const hash = sha3_256.create();
+	hash.update(publicKey);
+	hash.update("\0");
+	return aptos.HexString.fromUint8Array(hash.digest());
+}
 
 async function main() {
 	const signingMessage = new aptos.HexString('0x4cd1').toUint8Array();
@@ -12,6 +20,12 @@ async function main() {
 
 	const account = new aptos.AptosAccount(privateKeyHexStr.toUint8Array());
 	const address = account.address();
+	// public key -> address
+	{
+		const pubKeyHexStr = aptos.HexString.ensure('0xacdf5b6a88282858e157589119ea965cdeedab5f062ee3fb252b65cb15f7cbe9');
+		const address = pubKeyToAddress(pubKeyHexStr.toUint8Array());
+		assert.strictEqual(address.hex(), '0xdd7862a1d347806c9470ba6e4d13b91b60ba5539a00065090ce8bbc24c4dd37a')
+	}
 	// fund account
 	{
 		const faucetClient = new aptos.FaucetClient(NODE_URL, FAUCET_URL, null);
@@ -40,18 +54,11 @@ async function main() {
 		const signedMsg = nacl.sign(signingMessage, account.signingKey.secretKey);
 		console.log('signedMsg : ', aptos.HexString.fromUint8Array(signedMsg).hex());
 	}
-
-	// public key -> address
 	{
-		const pubKeyHexStr = aptos.HexString.ensure('0xf5678bc8513c5247ad8a9ee547bc39be283a97de6511facea0e66ef6b91c5a47');
-
-		const pubKey = new aptos.TxnBuilderTypes.Ed25519PublicKey(pubKeyHexStr.toUint8Array())
-		const multiSigPublicKey = new aptos.TxnBuilderTypes.MultiEd25519PublicKey([pubKey], 0);
-		const authKey = aptos.TxnBuilderTypes.AuthenticationKey.fromMultiEd25519PublicKey(multiSigPublicKey);
-		const address = authKey.derivedAddress().hex();
-		// assert.strictEqual(address, '0xf7201ffdfac8f6d3b2ea5c98b4932b3c4b7d3c3565e734288a374c9f0616333b')
+		const pubKeyHexStr = aptos.HexString.ensure('0xacdf5b6a88282858e157589119ea965cdeedab5f062ee3fb252b65cb15f7cbe9');
+		const address = pubKeyToAddress(pubKeyHexStr.toUint8Array());
+		console.log('address : ', address.hex());
 	}
-
 	// faucet
 	{
 		const faucetClient = new aptos.FaucetClient(NODE_URL, FAUCET_URL, null);
