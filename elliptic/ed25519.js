@@ -57,7 +57,10 @@ function verify() {
 	console.log('verify complete. \n');
 }
 
+function main() {
+	generate();
+	verify();
+	edVerify();
+}
 
-generate();
-verify();
-edVerify();
+main()
