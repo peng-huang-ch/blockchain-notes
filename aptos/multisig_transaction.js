@@ -1,5 +1,7 @@
 /* eslint-disable no-console */
-
+// Copyright (c) Aptos
+// SPDX-License-Identifier: Apache-2.0
+// https://github.com/aptos-labs/aptos-core/blob/main/ecosystem/typescript/sdk/examples/typescript/multisig_transaction.ts
 
 const { AptosClient, AptosAccount, FaucetClient, HexString, BCS, TransactionBuilder, TransactionBuilderABI, TransactionBuilderMultiEd25519, TxnBuilderTypes } = require("aptos");
 const assert = require('assert').strict;
@@ -9,7 +11,6 @@ const NODE_URL = "https://fullnode.devnet.aptoslabs.com";
 const FAUCET_URL = "https://faucet.devnet.aptoslabs.com";
 const aptosCoinStore = '0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>';
 
-// https://github.com/aptos-labs/aptos-core/blob/main/ecosystem/typescript/sdk/examples/typescript/multisig_transaction.ts
 async function sdk() {
 	const client = new AptosClient(NODE_URL);
 	const faucetClient = new FaucetClient(NODE_URL, FAUCET_URL);
