@@ -1,10 +1,10 @@
 const { AptosClient, AptosAccount, CoinClient, FaucetClient, HexString } = require("aptos");
 
-const NODE_URL = 'https://fullnode.devnet.aptoslabs.com';
-const FAUCET_URL = 'https://faucet.devnet.aptoslabs.com';
+const NODE_URL = 'https://fullnode.testnet.aptoslabs.com';
+const FAUCET_URL = 'https://faucet.testnet.aptoslabs.com';
 
-const alice = new AptosAccount();
-const bob = new AptosAccount();
+const alice = new AptosAccount()
+const bob = new AptosAccount()
 
 // https://github.com/aptos-labs/aptos-core/blob/main/ecosystem/typescript/sdk/examples/typescript/transfer_coin.ts
 async function main() {
@@ -30,8 +30,8 @@ async function main() {
 
 	// Fund accounts.
 	// :!:>section_3
-	await faucetClient.fundAccount(alice.address(), 100_000_000);
-	await faucetClient.fundAccount(bob.address(), 0); // <:!:section_3
+	// await faucetClient.fundAccount(alice.address(), 100_000_000);
+	// await faucetClient.fundAccount(bob.address(), 0); // <:!:section_3
 
 	// Print out initial balances.
 	console.log("=== Initial Balances ===");
