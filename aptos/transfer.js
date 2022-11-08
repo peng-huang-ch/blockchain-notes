@@ -5,7 +5,7 @@ const assert = require('assert').strict;
 
 const aptosCoin = '0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>';
 
-const NODE_URL = 'https://fullnode.devnet.aptoslabs.com';
+const NODE_URL = 'https://fullnode.testnet.aptoslabs.com';
 const client = new aptos.AptosClient(NODE_URL);
 
 const COIN_ABIS = [
@@ -30,7 +30,6 @@ async function getAccountResources(address) {
 	console.log(`address coins	 : ${accountResource?.data?.coin?.value}.`);
 }
 
-
 async function getReqPayload(address, expiration_timestamp_secs = 1672531204n) {
 	const chainId = await client.getChainId();
 	const { sequence_number } = await client.getAccount(address);
@@ -44,10 +43,6 @@ async function getReqPayload(address, expiration_timestamp_secs = 1672531204n) {
 		chain_id: chainId,
 	}
 	return payload
-}
-
-async function signTnx() {
-
 }
 
 async function main() {
@@ -83,6 +78,7 @@ async function main() {
 	console.log('rawTxn : ', rawTxn);
 	{
 		const transactionBuilder = new aptos.TransactionBuilderABI(COIN_ABIS.map((abi) => new aptos.HexString(abi).toUint8Array()));
+		// const transactionBuilder = new aptos.TransactionBuilderRemoteABI(aptos);
 		const payload = transactionBuilder.buildTransactionPayload(
 			"0x1::coin::transfer",
 			['0x1::aptos_coin::AptosCoin'],
@@ -90,7 +86,6 @@ async function main() {
 		);
 		const payloadBytes = aptos.BCS.bcsToBytes(payload);
 		console.log("payload : ", HexString.fromUint8Array(payloadBytes).hex());
-
 
 		const builderConfig = {
 			sender: senderAddress,

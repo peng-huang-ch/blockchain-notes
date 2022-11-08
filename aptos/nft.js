@@ -3,13 +3,13 @@
 
 /* eslint-disable no-console */
 
-
 const { AptosClient, AptosAccount, FaucetClient, TokenClient, CoinClient, HexString } = require("aptos");
 
-const NODE_URL = 'https://fullnode.devnet.aptoslabs.com';
-const FAUCET_URL = 'https://faucet.devnet.aptoslabs.com';
-const alice = new AptosAccount(HexString.ensure('').toUint8Array());
-const bob = new AptosAccount(HexString.ensure('').toUint8Array());
+const NODE_URL = 'https://fullnode.testnet.aptoslabs.com';
+const FAUCET_URL = 'https://faucet.testnet.aptoslabs.com';
+
+const alice = new AptosAccount();
+const bob = new AptosAccount();
 
 async function main() {
 	// Create API and faucet clients.

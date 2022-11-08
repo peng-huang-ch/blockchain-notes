@@ -78,7 +78,7 @@ async function sdk() {
 		client.getChainId(),
 	]);
 
-	// See class definiton here
+	// See class definition here
 	// https://aptos-labs.github.io/ts-sdk-doc/classes/TxnBuilderTypes.RawTransaction.html#constructor.
 	const rawTxn = new TxnBuilderTypes.RawTransaction(
 		// Transaction sender account address
