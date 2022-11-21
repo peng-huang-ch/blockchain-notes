@@ -361,6 +361,7 @@ async function combineAllTransactions() {
 
 }
 
+// https://goerli.etherscan.io/tx/0xee088fab9a4cd5e7c277c7d6306130755fcf4c235408b67e09e1fc2a44cf5c7b
 async function combineDeployAndSafeTransactions() {
 	const endpoint = 'https://goerli.infura.io/v3/de9290b603fc4609a6f0a65e23e8c7d3';
 	const chainId = Chain.Goerli;
