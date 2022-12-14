@@ -66,7 +66,6 @@ async function deploySafeTx({
 	return { safeAddress, safeTx }
 }
 
-
 // 2-2. native coin
 async function exec_safe({
 	web3,
