@@ -308,8 +308,5 @@ async function main() {
 			break;
 	}
 }
+
 main().catch(console.error);
-
-
-
-export * as A from 'a'
