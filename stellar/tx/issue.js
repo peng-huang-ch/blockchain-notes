@@ -30,7 +30,7 @@ async function issue() {
       StellarSdk.Operation.changeTrust({
         asset: astroDollar,
         limit: '100000000',
-      })
+      }),
     )
     // setTimeout is required for a transaction
     .setTimeout(100)
@@ -57,7 +57,7 @@ async function issue() {
         destination: receivingKeys.publicKey(),
         asset: astroDollar,
         amount: '100000001',
-      })
+      }),
     )
     // setTimeout is required for a transaction
     .setTimeout(100)
@@ -132,7 +132,7 @@ async function transfer() {
         destination: chiveKeys.publicKey(),
         asset: astroDollar,
         amount: '1000',
-      })
+      }),
     )
     .addMemo(StellarSdk.Memo.text('phcc'))
     // setTimeout is required for a transaction
