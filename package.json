@@ -31,6 +31,7 @@
     "@bitgo/utxo-lib": "^1.9.4",
     "@bitgo/utxo-lib-v2": "npm:@bitgo/utxo-lib@^2.2.0",
     "@clover-network/node-types": "^1.0.4",
+    "@coral-xyz/anchor": "^0.29.0",
     "@cosmjs/amino": "^0.29.5",
     "@cosmjs/crypto": "^0.29.5",
     "@cosmjs/encoding": "^0.29.5",
@@ -58,7 +59,12 @@
     "@rainbow-me/fee-suggestions": "^2.1.0",
     "@safe-global/relay-kit": "0.1.0-alpha.1",
     "@scure/bip39": "^1.1.0",
+    "@solana/spl-token": "^0.4.1",
+    "@solana/web3.js": "^1.91.0",
+    "@sqds/multisig": "^2.1.1",
+    "@sqds/sdk": "^2.0.4",
     "@substrate/txwrapper-polkadot": "^5.0.1",
+    "@types/bn.js": "^5.1.5",
     "@uniswap/sdk-core": "^3.1.0",
     "@uniswap/smart-order-router": "^2.10.2",
     "@uniswap/token-lists": "1.0.0-beta.33",
@@ -90,7 +96,7 @@
     "ethereum-cryptography": "^0.1.3",
     "ethereumjs-abi": "^0.6.8",
     "ethereumjs-util": "^6.2.1",
-    "ethers": "^5.5.4",
+    "ethers": "5",
     "ethjs-util": "^0.1.6",
     "js-chain-libs": "^0.3.0",
     "keccak256": "^1.0.6",
@@ -120,6 +126,8 @@
     "yesno": "^0.4.0"
   },
   "devDependencies": {
+    "@types/bs58": "^4.0.4",
+    "@types/dotenv": "^8.2.0",
     "jest": "^27.0.6",
     "ts-node": "^10.9.1"
   },
