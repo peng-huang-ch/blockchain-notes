@@ -8,12 +8,12 @@
   },
   "author": "h499871809@gmail.com",
   "bugs": {
-    "url": "https://github.com/peng-huang-cc/crypto-notes/issues"
+    "url": "https://github.com/peng-huang-cc/blockchain-notes/issues"
   },
-  "homepage": "https://github.com/peng-huang-cc/crypto-notes#readme",
+  "homepage": "https://github.com/peng-huang-cc/blockchain-notes#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/peng-huang-cc/crypto-notes.git"
+    "url": "git+https://github.com/peng-huang-cc/blockchain-notes.git"
   },
   "keywords": [
     "avalanche",
@@ -25,7 +25,8 @@
     "ripple",
     "stellar",
     "tron",
-    "umi"
+    "umi",
+    "solana"
   ],
   "dependencies": {
     "@bitgo/utxo-lib": "^1.9.6",

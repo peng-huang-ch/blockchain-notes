@@ -1,7 +1,7 @@
 # blockchain-notes
 
-  The blockchain transaction construction
-  
+The blockchain transaction construction
+
 ## Support Chains
 
 ### bitcoin
@@ -42,6 +42,10 @@
 ### Tron
 
 - [tronweb](https://github.com/tronprotocol/tronweb)
+
+### Solana
+
+- [@solana/web3.js](https://github.com/solana-labs/solana-web3.js)
 
 ## Cross Chain
 
