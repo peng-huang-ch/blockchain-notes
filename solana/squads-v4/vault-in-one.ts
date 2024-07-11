@@ -1,14 +1,12 @@
-import 'dotenv/config';
-import bs58 from 'bs58';
 import web3, {
   clusterApiUrl,
-  SystemProgram,
   Connection,
   Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
   TransactionMessage,
   VersionedTransaction,
+  SystemProgram,
 } from '@solana/web3.js';
 import * as multisig from '@sqds/multisig';
 import invariant from 'invariant';
@@ -18,27 +16,20 @@ import {
   createAssociatedTokenAccountIdempotentInstruction,
   createInitializeMint2Instruction,
   getMinimumBalanceForRentExemptMint,
-  getMint,
   MINT_SIZE,
   TOKEN_2022_PROGRAM_ID,
 } from '@solana/spl-token';
 
-import { createAndSendV0Tx } from './utils';
+import { createAndSendV0Tx, generateMultisigMembers, extendLookupTable } from './utils';
+
+const { Multisig } = multisig.accounts;
 
 // Cluster Connection
 var url = clusterApiUrl('devnet');
 console.log('url         : ', url);
 var connection = new Connection(url, 'confirmed');
 
-var secretKey = process.env.SOL_SECRET_KEY;
-var aliceKey = process.env.SOL_ALICE_KEY;
-var bobKey = process.env.SOL_BOB_KEY;
-var carolKey = process.env.SOL_CAROL_KEY;
-
-const creator = Keypair.fromSecretKey(bs58.decode(secretKey));
-const almighty = Keypair.fromSecretKey(bs58.decode(aliceKey));
-const proposer = Keypair.fromSecretKey(bs58.decode(bobKey));
-const voter = Keypair.fromSecretKey(bs58.decode(carolKey));
+const { almighty, proposer, voter, creator } = generateMultisigMembers();
 
 const lookupTablePda = new PublicKey('F8EKrArN5677PYF7NTjepUbBNNW2r2w17doziWWKjmSw');
 const multisigPda = new PublicKey('5jScQQdYLABuQmhczMCmnPbAtPKyRaHDrdknSDq6oNrF');
@@ -156,6 +147,7 @@ export function accountsForImmediateTransactionExecute({
     vaultPda,
   });
   const [multiTxMsg] = multisig.types.transactionMessageBeet.deserialize(Buffer.from(transactionMessageBytes), 0);
+  console.log('multiTxMsg : ', multiTxMsg);
   const accounts = accountMetasForTransactionExecute({
     transactionPda,
     vaultPda,
@@ -170,51 +162,9 @@ export function accountsForImmediateTransactionExecute({
   return accounts;
 }
 
-async function createLookupTable() {
-  const payer = almighty;
-
-  // Step 1 - Fetch Latest Blockhash
-  let { lastValidBlockHeight, blockhash } = await connection.getLatestBlockhash('finalized');
-  console.log('   ✅ - Fetched latest blockhash. Last Valid Height:', lastValidBlockHeight);
-
-  const recentSlot = await connection.getSlot();
-  console.log('Current Slot:', recentSlot);
-
-  const [lookupTableInst, lookupTableAddress] = web3.AddressLookupTableProgram.createLookupTable({
-    authority: payer.publicKey,
-    payer: payer.publicKey,
-    recentSlot: recentSlot,
-  });
-
-  const extendInstruction = web3.AddressLookupTableProgram.extendLookupTable({
-    payer: payer.publicKey,
-    authority: payer.publicKey,
-    lookupTable: lookupTableAddress,
-    // lookupTable: lookupTablePda,
-    addresses: [
-      // new PublicKey('DberFS5bT3cLRhpu9NJH7HRA1o6fcNTanxSNMtJxb9hJ'),
-      web3.SystemProgram.programId,
-      almighty.publicKey, // almighty
-      creator.publicKey, // creator
-      proposer.publicKey, // proposer
-      voter.publicKey, // voter
-      multisigPda,
-    ],
-  });
-
-  // Step 2 - Log Lookup Table Address
-  console.log('Lookup Table Address:', lookupTablePda.toBase58());
-
-  // Step 3 - Generate a transaction and send it to the network
-  await createAndSendV0Tx(connection, [lookupTableInst, extendInstruction], payer, [payer]);
-}
-
 // all in one transaction.
 async function createVaultTransaction() {
   var { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
-
-  console.log('creator  address : ', creator.publicKey.toBase58());
-  console.log('almighty address : ', almighty.publicKey.toBase58());
 
   // Step 1 - Fetch our address lookup table
   const lookupTable = await connection.getAddressLookupTable(lookupTablePda);
@@ -227,7 +177,7 @@ async function createVaultTransaction() {
   // const addressLookupTableAccounts = undefined;
   console.log('addressLookupTableAccounts : ', addressLookupTableAccounts);
 
-  const multisigAccount = await multisig.accounts.Multisig.fromAccountAddress(connection, multisigPda);
+  const multisigAccount = await Multisig.fromAccountAddress(connection, multisigPda);
   const rentCollector = multisigAccount.rentCollector;
   const transactionIndex = multisig.utils.toBigInt(multisigAccount.transactionIndex) + 1n;
   // const transactionIndex = 93n;
@@ -245,18 +195,8 @@ async function createVaultTransaction() {
     transactionIndex,
   });
 
-  const recentSlot = await connection.getSlot();
-  console.log('Current Slot:', recentSlot);
-
-  const payer = almighty;
-  const extendInstruction = web3.AddressLookupTableProgram.extendLookupTable({
-    payer: payer.publicKey,
-    authority: payer.publicKey,
-    lookupTable: lookupTablePda,
-    addresses: [transactionPda, proposalPda, multisigPda, rentCollector],
-  });
-
-  await createAndSendV0Tx(connection, [extendInstruction], payer, [payer]);
+  await extendLookupTable(connection, almighty, lookupTablePda, [transactionPda, proposalPda]);
+  console.log('🎉 - Extend lookup table : ', lookupTablePda.toBase58());
 
   // Default vault, index 0.
   const [vaultPda] = multisig.getVaultPda({
@@ -269,11 +209,6 @@ async function createVaultTransaction() {
   console.log('transactionPda : ', transactionPda.toBase58());
   console.log('proposalPda    : ', proposalPda.toBase58());
 
-  console.log('almighty       : ', almighty.publicKey.toBase58());
-  console.log('proposer       : ', proposer.publicKey.toBase58());
-  console.log('voter          : ', voter.publicKey.toBase58());
-  console.log('creator        : ', creator.publicKey.toBase58());
-
   const lamportsForMintRent = await getMinimumBalanceForRentExemptMint(connection);
 
   // so we use an Ephemeral Signer provided by the Multisig program as the Mint account.
@@ -284,12 +219,12 @@ async function createVaultTransaction() {
   });
 
   // user custom ix
-  const transferIx = web3.SystemProgram.transfer({
+  const transferIx = SystemProgram.transfer({
     fromPubkey: vaultPda,
     toPubkey: creator.publicKey,
     lamports: LAMPORTS_PER_SOL * 0.001,
   });
-
+  console.log('mintPda : ', mintPda);
   const mint = new PublicKey('HzwqbKZw8HxMN6bF2yFZNrht3c2iXXzpKcFu7uBEDKtr');
 
   // Create transfer instruction
@@ -309,17 +244,17 @@ async function createVaultTransaction() {
     payerKey: vaultPda,
     recentBlockhash: blockhash,
     instructions: [
-      // SystemProgram.createAccount({
-      //   fromPubkey: vaultPda,
-      //   newAccountPubkey: mintPda,
-      //   space: MINT_SIZE,
-      //   lamports: lamportsForMintRent,
-      //   programId: TOKEN_2022_PROGRAM_ID,
-      // }),
-      // createInitializeMint2Instruction(mintPda, 9, vaultPda, vaultPda, TOKEN_2022_PROGRAM_ID),
-      transferIx,
-      createAssociatedTokenIx,
-      tokenTransferIx,
+      SystemProgram.createAccount({
+        fromPubkey: vaultPda,
+        newAccountPubkey: mintPda,
+        space: MINT_SIZE,
+        lamports: lamportsForMintRent,
+        programId: TOKEN_2022_PROGRAM_ID,
+      }),
+      createInitializeMint2Instruction(mintPda, 9, vaultPda, vaultPda, TOKEN_2022_PROGRAM_ID),
+      // transferIx,
+      // createAssociatedTokenIx,
+      // tokenTransferIx,
     ],
   });
 
@@ -329,7 +264,7 @@ async function createVaultTransaction() {
     transactionIndex,
     vaultIndex,
     /** Number of additional signing PDAs required by the transaction. */
-    ephemeralSigners: 0,
+    ephemeralSigners: 1,
     /** Transaction message to wrap into a multisig transaction. */
     transactionMessage: txMsg,
     /** `AddressLookupTableAccount`s referenced in `transaction_message`. */
@@ -363,7 +298,7 @@ async function createVaultTransaction() {
     transactionPda,
     vaultPda,
     message: txMsg,
-    ephemeralSignerBumps: [],
+    ephemeralSignerBumps: [mintBump],
     addressLookupTableAccounts,
   });
 
@@ -392,7 +327,7 @@ async function createVaultTransaction() {
       proposalApproveIx1, // proposal approve transaction
       proposalApproveIx2, // proposal approve transaction
       executeTransactionIx, // execute transaction
-      accountsCloseIx, // close tx and proposal accounts
+      // accountsCloseIx, // close tx and proposal accounts
     ],
   }).compileToV0Message(addressLookupTableAccounts);
 

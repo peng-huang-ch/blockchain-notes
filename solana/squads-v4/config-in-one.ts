@@ -1,9 +1,8 @@
-import 'dotenv/config';
-import bs58 from 'bs58';
-import { clusterApiUrl, Connection, Keypair, PublicKey, TransactionMessage, VersionedTransaction } from '@solana/web3.js';
+import { clusterApiUrl, Connection, PublicKey, TransactionMessage, VersionedTransaction } from '@solana/web3.js';
 import * as multisig from '@sqds/multisig';
 
-import { createAutonomousMultisig } from './utils';
+import { createAutonomousMultisig, generateMultisigMembers } from './utils';
+
 const { Permissions, Permission } = multisig.types;
 const { Multisig } = multisig.accounts;
 
@@ -12,15 +11,7 @@ var url = clusterApiUrl('devnet');
 console.log('url         : ', url);
 var connection = new Connection(url, 'confirmed');
 
-var secretKey = process.env.SOL_SECRET_KEY;
-var aliceKey = process.env.SOL_ALICE_KEY;
-var bobKey = process.env.SOL_BOB_KEY;
-var carolKey = process.env.SOL_CAROL_KEY;
-
-const creator = Keypair.fromSecretKey(bs58.decode(secretKey));
-const almighty = Keypair.fromSecretKey(bs58.decode(aliceKey));
-const proposer = Keypair.fromSecretKey(bs58.decode(bobKey));
-const voter = Keypair.fromSecretKey(bs58.decode(carolKey));
+const { almighty, proposer, voter, creator } = generateMultisigMembers();
 
 // all in one transaction.
 async function main() {

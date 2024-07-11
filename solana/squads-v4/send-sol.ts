@@ -1,31 +1,19 @@
-import 'dotenv/config';
-import bs58 from 'bs58';
-import web3, { clusterApiUrl, Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, TransactionMessage } from '@solana/web3.js';
+import web3, { clusterApiUrl, Connection, LAMPORTS_PER_SOL, PublicKey, TransactionMessage } from '@solana/web3.js';
 import * as multisig from '@sqds/multisig';
+
+import { generateMultisigMembers } from './utils';
 
 // Cluster Connection
 var url = clusterApiUrl('devnet');
 console.log('url         : ', url);
 var connection = new Connection(url, 'confirmed');
+const { Multisig } = multisig.accounts;
 
-var secretKey = process.env.SOL_SECRET_KEY;
-var aliceKey = process.env.SOL_ALICE_KEY;
-var bobKey = process.env.SOL_BOB_KEY;
-var carolKey = process.env.SOL_CAROL_KEY;
-
-const creator = Keypair.fromSecretKey(bs58.decode(secretKey));
-const almighty = Keypair.fromSecretKey(bs58.decode(aliceKey));
-const proposer = Keypair.fromSecretKey(bs58.decode(bobKey));
-const voter = Keypair.fromSecretKey(bs58.decode(carolKey));
+const { almighty, proposer, voter, creator } = generateMultisigMembers();
 
 // send sol.
 async function main() {
   var { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
-
-  console.log('creator  address  : ', creator.publicKey.toBase58()); // 3ejod8WdzSuQCXsY7jVvm74nBZr1JrxRnC1zZnxxBVWN
-  console.log('almighty address : ', almighty.publicKey.toBase58()); // 9XPq2y985ouFBUQ9ddRk25sL1HAwEaQdHGCKeBptMzBj
-  console.log('proposer address : ', proposer.publicKey.toBase58()); // GNxKGSCFYyzpnMo6qgi9BBJuS9sFsFKsX3DNGXXULJJG
-  console.log('voter    address : ', voter.publicKey.toBase58()); // ExdJWJT6TNh8mWeri1y6iEsYy5WRvDTF3FhJ2JudbiFi
 
   // 9XPq2y985ouFBUQ9ddRk25sL1HAwEaQdHGCKeBptMzBj,ExdJWJT6TNh8mWeri1y6iEsYy5WRvDTF3FhJ2JudbiFi,GNxKGSCFYyzpnMo6qgi9BBJuS9sFsFKsX3DNGXXULJJG
   var multisigPda = new PublicKey('5jScQQdYLABuQmhczMCmnPbAtPKyRaHDrdknSDq6oNrF');
