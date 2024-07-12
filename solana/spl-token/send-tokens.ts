@@ -10,7 +10,6 @@ var secretKey = process.env.SOL_SECRET_KEY;
 const fromWallet = Keypair.fromSecretKey(bs58.decode(secretKey));
 
 // console.log('from address : ', fromWallet.publicKey.toString());
-// console.log('to addresconst mint = await createMint(connection, fromWallet, fromWallet.publicKey, fromWallet.publicKey, 9);s : ', toAddress.toString());
 
 async function main() {
   // Generate a new wallet to receive newly minted token
