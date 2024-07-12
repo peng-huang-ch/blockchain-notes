@@ -1,23 +1,15 @@
-import web3, {
-  clusterApiUrl,
-  Connection,
-  Keypair,
-  LAMPORTS_PER_SOL,
-  PublicKey,
-  TransactionMessage,
-  VersionedTransaction,
-  SystemProgram,
-} from '@solana/web3.js';
+import web3, { clusterApiUrl, Connection, PublicKey, TransactionMessage, VersionedTransaction, SystemProgram } from '@solana/web3.js';
 import * as multisig from '@sqds/multisig';
 import invariant from 'invariant';
 import {
   getAssociatedTokenAddressSync,
-  createTransferInstruction,
   createAssociatedTokenAccountIdempotentInstruction,
   createInitializeMint2Instruction,
+  createMintToInstruction,
   getMinimumBalanceForRentExemptMint,
   MINT_SIZE,
   TOKEN_2022_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 
 import { generateMultisigMembers, extendLookupTable } from './utils';
@@ -147,7 +139,6 @@ export function accountsForImmediateTransactionExecute({
     vaultPda,
   });
   const [multiTxMsg] = multisig.types.transactionMessageBeet.deserialize(Buffer.from(transactionMessageBytes), 0);
-
   const accounts = accountMetasForTransactionExecute({
     transactionPda,
     vaultPda,
@@ -156,7 +147,6 @@ export function accountsForImmediateTransactionExecute({
     addressLookupTableAccounts,
     programId,
   });
-
   return accounts;
 }
 
@@ -215,49 +205,34 @@ async function createVaultTransaction() {
     ephemeralSignerIndex: 0,
     programId: multisig.PROGRAM_ID,
   });
+  const ephemeralSigners = 1;
+  const ephemeralSignerBumps = [mintBump];
 
-  // const ephemeralSigners = 1;
-  // const ephemeralSignerBumps = [mintBump];
-  const ephemeralSigners = 0;
-  const ephemeralSignerBumps = [];
-
-  // user custom ix
-  const transferIx = SystemProgram.transfer({
-    fromPubkey: vaultPda,
-    toPubkey: creator.publicKey,
-    lamports: LAMPORTS_PER_SOL * 0.001,
-  });
-  console.log('mintPda : ', mintPda);
-  const mint = new PublicKey('HzwqbKZw8HxMN6bF2yFZNrht3c2iXXzpKcFu7uBEDKtr');
-
-  // Create transfer instruction
   // Get the token account of the fromWallet address, and if it does not exist, create it
-  const fromTokenAccount = getAssociatedTokenAddressSync(mint, vaultPda, true);
-
-  // Get the token account of the toWallet address, and if it does not exist, create it
-  // const toAddress = almighty.publicKey;
-  const toAddress = Keypair.generate().publicKey;
-  const toTokenAccount = getAssociatedTokenAddressSync(mint, toAddress);
-  const tokenAmount = 10_000;
-
-  const createAssociatedTokenIx = createAssociatedTokenAccountIdempotentInstruction(vaultPda, toTokenAccount, toAddress, mint);
-  const tokenTransferIx = createTransferInstruction(fromTokenAccount, toTokenAccount, vaultPda, tokenAmount);
+  const associatedTo = vaultPda;
+  const associatedToken = getAssociatedTokenAddressSync(mintPda, associatedTo, true, TOKEN_2022_PROGRAM_ID);
 
   const txMsg = new TransactionMessage({
     payerKey: vaultPda,
     recentBlockhash: blockhash,
     instructions: [
-      // SystemProgram.createAccount({
-      //   fromPubkey: vaultPda,
-      //   newAccountPubkey: mintPda,
-      //   space: MINT_SIZE,
-      //   lamports: lamportsForMintRent,
-      //   programId: TOKEN_2022_PROGRAM_ID,
-      // }),
-      // createInitializeMint2Instruction(mintPda, 9, vaultPda, vaultPda, TOKEN_2022_PROGRAM_ID),
-      transferIx,
-      createAssociatedTokenIx,
-      tokenTransferIx,
+      SystemProgram.createAccount({
+        fromPubkey: vaultPda,
+        newAccountPubkey: mintPda,
+        space: MINT_SIZE,
+        lamports: lamportsForMintRent,
+        programId: TOKEN_2022_PROGRAM_ID,
+      }),
+      createInitializeMint2Instruction(mintPda, 9, vaultPda, vaultPda, TOKEN_2022_PROGRAM_ID),
+      createAssociatedTokenAccountIdempotentInstruction(
+        vaultPda,
+        associatedToken,
+        associatedTo,
+        mintPda,
+        TOKEN_2022_PROGRAM_ID,
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+      ),
+      createMintToInstruction(mintPda, associatedToken, vaultPda, 10 ** 9 * 10 ** 6, [], TOKEN_2022_PROGRAM_ID),
     ],
   });
 
@@ -339,7 +314,6 @@ async function createVaultTransaction() {
   tx.sign([almighty, proposer, voter]);
 
   const created = await connection.sendTransaction(tx);
-  console.log('created signature : ', created);
   await connection.confirmTransaction({
     signature: created,
     blockhash,
@@ -358,6 +332,7 @@ async function createVaultTransaction() {
     transactionIndex,
     member: almighty.publicKey,
     signers: [almighty],
+    // sendOptions: { skipPreflight: true },
   });
 
   await connection.confirmTransaction({
@@ -407,7 +382,6 @@ async function createVaultTransaction() {
 // }
 
 async function main() {
-  // await createLookupTable();
   await createVaultTransaction();
   // await execute(transactionIndex);
 }
