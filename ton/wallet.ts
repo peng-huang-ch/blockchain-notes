@@ -1,5 +1,5 @@
-import { KeyPair, mnemonicNew, mnemonicToPrivateKey } from '@ton/crypto';
-import { Address, internal, SendMode, TonClient, WalletContractV3R2, WalletContractV4, WalletContractV5R1 } from '@ton/ton';
+import { KeyPair, mnemonicToPrivateKey } from '@ton/crypto';
+import { TonClient, WalletContractV3R2, WalletContractV4, WalletContractV5R1 } from '@ton/ton';
 
 import 'dotenv/config';
 
@@ -9,7 +9,8 @@ const client = new TonClient({
   apiKey: '4f96a149e04e0821d20f9e99ee716e20ff52db7238f38663226b1c0f303003e0',
 });
 
-async function v3r2Wallet(keyPair: KeyPair) {
+// https://github.com/ton-org/ton/blob/master/src/wallets/WalletContractV3R2.spec.ts
+async function walletV3R2(keyPair: KeyPair) {
   const workchain = 0; // Usually you need a workchain 0
   // Create wallet contract
   const wallet = WalletContractV3R2.create({ workchain, publicKey: keyPair.publicKey });
@@ -22,7 +23,8 @@ async function v3r2Wallet(keyPair: KeyPair) {
   return contract;
 }
 
-async function v4Wallet(keyPair: KeyPair) {
+// https://github.com/ton-org/ton/blob/master/src/wallets/WalletContractV4.spec.ts
+async function walletV4R2(keyPair: KeyPair) {
   const workchain = 0; // Usually you need a workchain 0
   // Create wallet contract
   const wallet = WalletContractV4.create({ workchain, publicKey: keyPair.publicKey });
@@ -36,7 +38,8 @@ async function v4Wallet(keyPair: KeyPair) {
   return contract;
 }
 
-async function v5r1Wallet(keyPair: KeyPair) {
+// https://github.com/ton-org/ton/blob/master/src/wallets/v5r1/WalletContractV5R1.spec.ts
+async function walletV5R1(keyPair: KeyPair) {
   // Create wallet contract
   const wallet = WalletContractV5R1.create({ publicKey: keyPair.publicKey });
   const contract = client.open(wallet);
@@ -51,11 +54,11 @@ async function v5r1Wallet(keyPair: KeyPair) {
 async function main() {
   const mnemonics = process.env.TON_MNEMONIC;
   const keyPair = await mnemonicToPrivateKey(mnemonics.split(' '));
-  await v3r2Wallet(keyPair);
+  await walletV3R2(keyPair);
 
-  await v4Wallet(keyPair);
+  await walletV4R2(keyPair);
 
-  await v5r1Wallet(keyPair);
+  await walletV5R1(keyPair);
 }
 
 main().catch(console.error);
