@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import bs58 from 'bs58';
-import { clusterApiUrl, Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram } from '@solana/web3.js';
+import { clusterApiUrl, Connection, Keypair } from '@solana/web3.js';
 import * as multisig from '@sqds/multisig';
 
 const { Permissions, Permission } = multisig.types;
