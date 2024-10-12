@@ -13,7 +13,7 @@ A curated list of blockchain services and transaction construction samples.
   - [Avalanche](#avalanche)
   - [Ripple](#ripple) - The XRP Ledger is a decentralized public blockchain built for business.
   - [Stellar](#stellar) - The Stellar network is an open-sourced, public blockchain powered by the Stellar Consensus protocol (SCP), a proof-of-agreement (PoA) consensus mechanism.
-  - [Tron](#tron)
+  - [Tron](#tron) - TRON is dedicated to accelerating the decentralization of the Internet via blockchain technology and decentralized applications (DApps).
   - [Solana](#solana) - Solana is a blockchain built for mass adoption. It's a high-performance network that is utilized for a range of use cases, including finance, NFTs, payments, and gaming. Solana operates as a single global state machine and is open, interoperable and decentralized.
   - [Ton](#ton) - A decentralized and open internet, created by the community using a technology designed by Telegram.
 
@@ -124,7 +124,7 @@ A curated list of blockchain services and transaction construction samples.
 
 [⬆️ top](#table-of-contents)
 
-### Tron
+### [Tron](https://tron.network/)
 
 - [tronweb](https://github.com/tronprotocol/tronweb)
 
