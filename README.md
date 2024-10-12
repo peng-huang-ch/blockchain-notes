@@ -38,6 +38,8 @@ A curated list of blockchain services and transaction construction samples.
 
 - [awesome-bitcoin](https://github.com/igorbarinov/awesome-bitcoin)
 
+[⬆️ top](#table-of-contents)
+
 ### [Ethereum](https://ethereum.org/)
 
 #### [Website](https://ethereum.org/en/)
@@ -61,6 +63,8 @@ A curated list of blockchain services and transaction construction samples.
 - [awesome-ethereum](https://github.com/bekatom/awesome-ethereum) - Awesome Ethereum & Dapps Resources. By @bekatom
 - [awesome-ethereum](https://github.com/ttumiel/Awesome-Ethereum) - An awesome list about everything related to the Ethereum platform. By @ttumiel
 
+[⬆️ top](#table-of-contents)
+
 ### [Cosmos](https://cosmos.network/)
 
 #### [Website](https://cosmos.network/)
@@ -75,6 +79,8 @@ A curated list of blockchain services and transaction construction samples.
 #### Awesome
 
 - [awesome-cosmos](https://github.com/cosmos/awesome-cosmos)
+
+[⬆️ top](#table-of-contents)
 
 ### [Polkadot](https://polkadot.com/)
 
@@ -92,25 +98,37 @@ A curated list of blockchain services and transaction construction samples.
 - [awesome-dot](https://github.com/haquefardeen/awesome-dot) - A list that curates the best resources, projects, and learning around the Polkadot and Kusama ecosystem. By @haquefardeen
 - [awesome-substrate](https://github.com/substrate-developer-hub/awesome-substrate) - A curated list of Substrate resources, projects, and tools. By @substrate-developer-hub
 
+[⬆️ top](#table-of-contents)
+
 ### Cardano
 
 - [cardano-serialization-lib](https://github.com/Emurgo/cardano-serialization-lib)
+
+[⬆️ top](#table-of-contents)
 
 ### Avalanche
 
 - [avalanchejs](https://github.com/ava-labs/avalanchejs)
 
+[⬆️ top](#table-of-contents)
+
 ### [Ripple](https://xrpl.org/)
 
 - [xrpl.js](https://github.com/XRPLF/xrpl.js) - A JavaScript/TypeScript library for interacting with the XRP Ledger
+
+[⬆️ top](#table-of-contents)
 
 ### Stellar
 
 - [stellar](https://github.com/stellar/js-stellar-sdk)
 
+[⬆️ top](#table-of-contents)
+
 ### Tron
 
 - [tronweb](https://github.com/tronprotocol/tronweb)
+
+[⬆️ top](#table-of-contents)
 
 ### [Solana](https://solana.com/)
 
@@ -132,6 +150,8 @@ A curated list of blockchain services and transaction construction samples.
 
 - [awesome-solana](https://github.com/csjcode/awesome-solana)
 
+[⬆️ top](#table-of-contents)
+
 ### [Ton](https://ton.org/)
 
 #### [Website](https://ton.org/)
@@ -147,6 +167,8 @@ A curated list of blockchain services and transaction construction samples.
 #### Awesome
 
 - [awesome-ton](https://github.com/ton-community/awesome-ton) - A carefully curated compendium of standout libraries, tools, services, protocols, and smart contracts associated with the TON ecosystem. By @ton-community
+
+<a href="#table-of-contents" style="float: right;">[⬆️ top](#table-of-contents)</a>
 
 ## Cross Chain
 
