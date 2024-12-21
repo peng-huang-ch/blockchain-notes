@@ -2,6 +2,7 @@ import 'dotenv/config';
 import assert from 'node:assert';
 import bs58 from 'bs58';
 import nacl from 'tweetnacl';
+import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
 import web3, {
   clusterApiUrl,
   Connection,
@@ -111,8 +112,10 @@ async function main() {
   const bobKey = process.env.SOL_BOB_KEY;
   const from = Keypair.fromSecretKey(bs58.decode(aliceKey));
   const to = Keypair.fromSecretKey(bs58.decode(bobKey));
+
   const amount = LAMPORTS_PER_SOL / 100;
   const commitment = 'confirmed';
+  console.log('endpoint', url);
 
   await legacy(from, to, amount, commitment);
   await versioned(from, to, amount, commitment);
